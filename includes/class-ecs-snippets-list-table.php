@@ -82,6 +82,11 @@ class Snippets_List_Table extends \WP_List_Table {
 			$args['type'] = sanitize_text_field( wp_unslash( $_REQUEST['type'] ) );
 		}
 
+		// Add tag filter from URL.
+		if ( ! empty( $_REQUEST['tag'] ) ) {
+			$args['tag'] = sanitize_text_field( wp_unslash( $_REQUEST['tag'] ) );
+		}
+
 		// Add view filter.
 		switch ( $this->current_view ) {
 			case 'active':
@@ -165,6 +170,7 @@ class Snippets_List_Table extends \WP_List_Table {
 			'cb'     => '<input type="checkbox" />',
 			'title'  => __( 'Title', 'code-snippet' ),
 			'type'   => __( 'Type', 'code-snippet' ),
+			'tags'   => __( 'Tags', 'code-snippet' ),
 			'mode'   => __( 'Mode', 'code-snippet' ),
 			'author' => __( 'Author', 'code-snippet' ),
 			'active' => __( 'Active', 'code-snippet' ),
@@ -238,6 +244,33 @@ class Snippets_List_Table extends \WP_List_Table {
 	}
 
 	/**
+	 * Render tags column.
+	 *
+	 * @param array $item Snippet data.
+	 * @return string
+	 */
+	public function column_tags( $item ): string {
+		$tags_json = $item['tags'] ?? '[]';
+		$tags = json_decode( $tags_json, true );
+
+		if ( empty( $tags ) || ! is_array( $tags ) ) {
+			return '<span aria-hidden="true">—</span>';
+		}
+
+		$output = [];
+		foreach ( $tags as $tag ) {
+			$filter_url = add_query_arg( 'tag', $tag, admin_url( 'admin.php?page=code-snippet' ) );
+			$output[] = sprintf( 
+				'<a href="%s" class="ecs-tag">%s</a>',
+				esc_url( $filter_url ),
+				esc_html( $tag )
+			);
+		}
+
+		return implode( ' ', $output );
+	}
+
+	/**
 	 * Render checkbox column.
 	 *
 	 * @param array $item Snippet data.
@@ -287,6 +320,16 @@ class Snippets_List_Table extends \WP_List_Table {
 				'<a href="%s">%s</a>',
 				admin_url( 'admin.php?page=wp-smart-code-editor&snippet_id=' . $snippet_id ),
 				__( 'Edit', 'code-snippet' )
+			);
+
+			// Duplicate action.
+			$actions['duplicate'] = sprintf(
+				'<a href="%s">%s</a>',
+				wp_nonce_url(
+					admin_url( 'admin.php?page=code-snippet&action=duplicate&id=' . $snippet_id ),
+					'duplicate_snippet_' . $snippet_id
+				),
+				__( 'Duplicate', 'code-snippet' )
 			);
 
 			// Toggle action.
@@ -577,6 +620,9 @@ class Snippets_List_Table extends \WP_List_Table {
 		}
 		if ( ! empty( $_REQUEST['type'] ) ) {
 			echo '<input type="hidden" name="type" value="' . esc_attr( sanitize_text_field( wp_unslash( $_REQUEST['type'] ) ) ) . '" />';
+		}
+		if ( ! empty( $_REQUEST['tag'] ) ) {
+			echo '<input type="hidden" name="tag" value="' . esc_attr( sanitize_text_field( wp_unslash( $_REQUEST['tag'] ) ) ) . '" />';
 		}
 		?>
 		<p class="search-box">

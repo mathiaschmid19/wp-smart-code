@@ -528,7 +528,7 @@ class Plugin {
 			);
 
 			// Localize AI Assistant script
-			wp_localize_script( 'ecs-ai-assistant', 'ecsData', [
+			wp_localize_script( 'ecs-ai-assistant', 'ecsAiData', [
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ecs_ai_nonce' ),
 			] );
@@ -591,7 +591,7 @@ class Plugin {
 		}
 
 		// Validate action
-		$allowed_actions = [ 'toggle', 'trash', 'restore', 'delete' ];
+		$allowed_actions = [ 'toggle', 'trash', 'restore', 'delete', 'duplicate' ];
 		if ( ! in_array( $action, $allowed_actions, true ) ) {
 			wp_die( esc_html__( 'Invalid action.', 'code-snippet' ) );
 		}
@@ -613,6 +613,16 @@ class Plugin {
 		$redirect_url = admin_url( 'admin.php?page=code-snippet' );
 
 		switch ( $action ) {
+			case 'duplicate':
+				$new_id = $this->snippet->duplicate( $id );
+				$result = ( $new_id !== false );
+				$message = $result ? __( 'Snippet copied successfully.', 'code-snippet' ) : __( 'Failed to copy snippet.', 'code-snippet' );
+				// Preserve current view
+				if ( $current_view ) {
+					$redirect_url = add_query_arg( 'view', $current_view, $redirect_url );
+				}
+				break;
+
 			case 'toggle':
 				$new_status = $snippet['active'] ? 0 : 1;
 				$result = $this->snippet->update( $id, [ 'active' => $new_status ] );

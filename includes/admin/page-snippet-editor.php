@@ -20,6 +20,7 @@ $title = $is_new ? '' : esc_attr( $snippet['title'] );
 $slug = $is_new ? '' : esc_attr( $snippet['slug'] );
 $type = $is_new ? 'php' : esc_attr( $snippet['type'] );
 $code = $is_new ? '' : esc_textarea( $snippet['code'] );
+$tags = $is_new ? '' : implode( ', ', json_decode( $snippet['tags'] ?? '[]', true ) ?? [] );
 $active = $is_new ? false : (bool) $snippet['active'];
 $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snippet', 'code-snippet' );
 
@@ -180,6 +181,22 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 						class="ecs-code-editor" 
 						placeholder="<?php esc_attr_e( 'Enter your code here...', 'code-snippet' ); ?>"
 					><?php echo esc_textarea( $code ); ?></textarea>
+				</div>
+			</div>
+
+
+			<!-- Tags Card -->
+			<div class="ecs-card">
+				<div class="ecs-card-header">
+					<h3 class="ecs-card-title">
+						<?php esc_html_e( 'Tags', 'code-snippet' ); ?>
+					</h3>
+				</div>
+				<div class="ecs-card-content">
+					<input type="text" name="tags" id="ecs-snippet-tags" class="large-text" value="<?php echo esc_attr( $tags ); ?>" placeholder="<?php esc_attr_e( 'Separate tags with commas', 'code-snippet' ); ?>">
+					<p class="description" style="margin-top: 8px;">
+						<?php esc_html_e( 'Used for filtering and organizing snippets.', 'code-snippet' ); ?>
+					</p>
 				</div>
 			</div>
 

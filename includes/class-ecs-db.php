@@ -65,6 +65,7 @@ class DB {
 			active TINYINT(1) NOT NULL DEFAULT 0,
 			deleted TINYINT(1) NOT NULL DEFAULT 0,
 			mode VARCHAR(20) NOT NULL DEFAULT 'auto_insert',
+			tags LONGTEXT DEFAULT NULL,
 			conditions LONGTEXT DEFAULT NULL,
 			author_id BIGINT UNSIGNED NOT NULL,
 			created_at DATETIME NOT NULL,
@@ -160,6 +161,22 @@ class DB {
 			$result4 = $wpdb->query( "ALTER TABLE {$this->table_name} ADD KEY idx_deleted (deleted)" );
 			if ( $result4 === false ) {
 				error_log( '[ECS] Failed to add deleted index: ' . $wpdb->last_error );
+			}
+		}
+
+		// Check if tags column exists
+		$tags_column_exists = $wpdb->get_results( $wpdb->prepare(
+			"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'tags'",
+			DB_NAME,
+			$this->table_name
+		) );
+		
+		if ( empty( $tags_column_exists ) ) {
+			// Add tags column
+			$result5 = $wpdb->query( "ALTER TABLE {$this->table_name} ADD COLUMN tags LONGTEXT DEFAULT NULL AFTER mode" );
+			if ( $result5 === false ) {
+				error_log( '[ECS] Failed to add tags column: ' . $wpdb->last_error );
 			}
 		}
 	}

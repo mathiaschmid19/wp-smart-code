@@ -73,6 +73,13 @@ class Snippet {
 	private ?string $conditions = null;
 
 	/**
+	 * Snippet tags (JSON).
+	 *
+	 * @var string|null
+	 */
+	private ?string $tags = null;
+
+	/**
 	 * Author ID.
 	 *
 	 * @var int
@@ -143,13 +150,14 @@ class Snippet {
 				'active'     => $active ? 1 : 0,
 				'mode'       => $mode,
 				'conditions' => $conditions,
+				'tags'       => $data['tags'] ?? null,
 				'author_id'  => $author_id,
 				'created_at' => current_time( 'mysql' ),
 				'updated_at' => current_time( 'mysql' ),
 			];
 
 			$formats = [
-				'%s', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s',
+				'%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s',
 			];
 
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
@@ -291,6 +299,10 @@ class Snippet {
 				$update_data['conditions'] = $data['conditions'];
 				$formats[] = '%s';
 			}
+			if ( isset( $data['tags'] ) ) {
+				$update_data['tags'] = $data['tags'];
+				$formats[] = '%s';
+			}
 			if ( isset( $data['deleted'] ) ) {
 				$update_data['deleted'] = $data['deleted'] ? 1 : 0;
 				$formats[] = '%d';
@@ -358,6 +370,38 @@ class Snippet {
 			}
 			return false;
 		}
+	}
+
+	/**
+	 * Duplicate a snippet.
+	 *
+	 * @param int $id Snippet ID to duplicate.
+	 * @return int|false New snippet ID on success, false on failure.
+	 */
+	public function duplicate( int $id ) {
+		$snippet = $this->get( $id );
+		
+		if ( ! $snippet ) {
+			return false;
+		}
+
+		// Create unique slug
+		$new_slug = $snippet['slug'] . '-copy-' . uniqid();
+		
+		// Prepare new data
+		$data = [
+			'title'      => sprintf( __( 'Copy of %s', 'code-snippet' ), $snippet['title'] ),
+			'slug'       => $new_slug,
+			'type'       => $snippet['type'],
+			'code'       => $snippet['code'],
+			'active'     => false, // Always duplicate as inactive
+			'mode'       => $snippet['mode'],
+			'conditions' => $snippet['conditions'],
+			'tags'       => $snippet['tags'],
+			'author_id'  => get_current_user_id(),
+		];
+
+		return $this->create( $data );
 	}
 
 	/**
@@ -453,6 +497,11 @@ class Snippet {
 			$where_args[] = $args['active'] ? 1 : 0;
 		}
 
+		if ( ! empty( $args['tag'] ) ) {
+			$where[] = 'tags LIKE %s';
+			$where_args[] = '%' . $wpdb->esc_like( $args['tag'] ) . '%';
+		}
+
 		if ( isset( $args['author_id'] ) ) {
 			$where[] = 'author_id = %d';
 			$where_args[] = $args['author_id'];
@@ -527,6 +576,11 @@ class Snippet {
 		if ( isset( $args['active'] ) ) {
 			$where[] = 'active = %d';
 			$where_args[] = $args['active'] ? 1 : 0;
+		}
+
+		if ( ! empty( $args['tag'] ) ) {
+			$where[] = 'tags LIKE %s';
+			$where_args[] = '%' . $wpdb->esc_like( $args['tag'] ) . '%';
 		}
 
 		if ( isset( $args['author_id'] ) ) {
