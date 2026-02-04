@@ -511,9 +511,20 @@
             : "Snippet updated successfully!"
         );
 
-        // Redirect to snippets list after short delay
+        // Reload the editor page after short delay (stay in editor)
         setTimeout(() => {
-          window.location.href = ecsEditorData.listUrl;
+          if (isNew && response && response.id) {
+            // For new snippets, redirect to editor with the new snippet ID
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('snippet_id', response.id);
+            currentUrl.searchParams.set('message', 'created');
+            window.location.href = currentUrl.toString();
+          } else {
+            // For existing snippets, just reload the current page
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('message', 'updated');
+            window.location.href = currentUrl.toString();
+          }
         }, 1000);
       } catch (error) {
         this.showNotice(
@@ -586,7 +597,7 @@
 
       // Create notice
       const $notice = $("<div>", {
-        class: `notice notice-${type} is-dismissible ecs-notice`,
+        class: `notice notice-${type} is-dismissible ecs-notice ecs-editor-notice`,
         html: `<p>${message}</p>`,
       });
 
@@ -595,8 +606,14 @@
         '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss</span></button>'
       );
 
-      // Insert notice
-      $(".ecs-editor-page .ecs-page-header").after($notice);
+      // Insert notice into the notices container (between header and content)
+      const $noticesContainer = $("#ecs-notices-container");
+      if ($noticesContainer.length) {
+        $noticesContainer.prepend($notice);
+      } else {
+        // Fallback: insert after page header
+        $(".ecs-editor-page .ecs-page-header").after($notice);
+      }
 
       // Handle dismiss
       $notice.find(".notice-dismiss").on("click", function () {
@@ -605,12 +622,15 @@
         });
       });
 
-      // Auto-dismiss after 5 seconds
-      setTimeout(() => {
-        $notice.fadeOut(200, function () {
-          $(this).remove();
-        });
-      }, 5000);
+      // Auto-dismiss after 5 seconds - but only for success/info notices, NOT errors
+      // Error notices should stay visible until manually dismissed
+      if (type !== "error") {
+        setTimeout(() => {
+          $notice.fadeOut(200, function () {
+            $(this).remove();
+          });
+        }, 5000);
+      }
 
       // Scroll to notice
       $("html, body").animate(
@@ -964,6 +984,159 @@
   };
 
   /**
+   * Revisions Manager
+   */
+  const ecsRevisions = {
+    /**
+     * Initialize revisions
+     */
+    init: function () {
+      // Only init if revisions container exists
+      if ($("#ecs-revisions-list").length) {
+        this.fetchRevisions();
+        this.attachEventListeners();
+      }
+    },
+
+    /**
+     * Attach event listeners
+     */
+    attachEventListeners: function () {
+      // Refresh button
+      $("#ecs-refresh-revisions").on("click", this.fetchRevisions.bind(this));
+
+      // Restore button (delegated)
+      $("#ecs-revisions-list").on(
+        "click",
+        ".ecs-restore-revision",
+        this.restoreRevision.bind(this)
+      );
+    },
+
+    /**
+     * Fetch revisions from API
+     */
+    fetchRevisions: async function () {
+      const container = $("#ecs-revisions-list");
+      const snippetId = $('input[name="snippet_id"]').val();
+
+      if (!snippetId || snippetId === "0") {
+        return;
+      }
+
+      // Show loading
+      container.html(`
+        <div class="ecs-loading-placeholder">
+          <span class="spinner is-active" style="float: none; margin: 0 8px 0 0;"></span>
+          Scanning for revisions...
+        </div>
+      `);
+
+      try {
+        const revisions = await wp.apiFetch({
+          path: `/ecs/v1/snippets/${snippetId}/revisions`,
+          method: "GET",
+        });
+
+        this.renderRevisions(revisions);
+      } catch (error) {
+        container.html(`
+          <div class="notice notice-error inline">
+            <p>Failed to load revisions: ${error.message}</p>
+          </div>
+        `);
+      }
+    },
+
+    /**
+     * Render revisions list
+     */
+    renderRevisions: function (revisions) {
+      const container = $("#ecs-revisions-list");
+
+      if (!revisions || revisions.length === 0) {
+        container.html(`
+          <div class="ecs-no-revisions">
+            <p>No revisions found for this snippet.</p>
+          </div>
+        `);
+        return;
+      }
+
+      let html = '<ul class="ecs-revisions-timeline">';
+
+      revisions.forEach((rev) => {
+        html += `
+          <li class="ecs-revision-item">
+            <div class="ecs-revision-info">
+              <span class="ecs-revision-author">
+                <strong>${rev.author_name}</strong>
+              </span>
+              <span class="ecs-revision-meta">
+                ${rev.time_ago} (${rev.created_at})
+              </span>
+              <span class="ecs-revision-title">
+                ${rev.title}
+              </span>
+            </div>
+            <div class="ecs-revision-actions">
+              <button type="button" class="button button-small ecs-restore-revision" data-id="${rev.id}">
+                Restore
+              </button>
+            </div>
+          </li>
+        `;
+      });
+
+      html += "</ul>";
+      container.html(html);
+    },
+
+    /**
+     * Restore a revision
+     */
+    restoreRevision: async function (e) {
+      e.preventDefault();
+      const btn = $(e.currentTarget);
+      const revisionId = btn.data("id");
+
+      if (
+        !confirm(
+          "Are you sure you want to restore this version? This will overwrite the current code and title."
+        )
+      ) {
+        return;
+      }
+
+      // Show loading state
+      btn.addClass("updating-message").prop("disabled", true).text("Restoring...");
+
+      try {
+        const response = await wp.apiFetch({
+          path: `/ecs/v1/revisions/${revisionId}/restore`,
+          method: "POST",
+        });
+
+        ecsEditor.showNotice("success", "Snippet restored successfully! Reloading...");
+
+        // Reload page to show restored content
+        setTimeout(() => {
+          // Add message param
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set("message", "restored");
+          window.location.href = currentUrl.toString();
+        }, 1000);
+      } catch (error) {
+        ecsEditor.showNotice(
+          "error",
+          "Failed to restore revision: " + (error.message || "Unknown error")
+        );
+        btn.removeClass("updating-message").prop("disabled", false).text("Restore");
+      }
+    },
+  };
+
+  /**
    * Initialize when document is ready
    */
   $(document).ready(function () {
@@ -977,6 +1150,7 @@
 
       ecsEditor.init();
       ecsConditions.init();
+      ecsRevisions.init();
     }
   });
 })(jQuery);

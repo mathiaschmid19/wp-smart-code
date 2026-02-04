@@ -512,9 +512,10 @@ class Sandbox
                 }
                 
                 $code = $snippet['code'] ?? '';
+                $snippet_id = (int) ($snippet['id'] ?? 0);
                 if (!empty($code)) {
-                    // Execute PHP snippet
-                    $this->execute_php_frontend($code);
+                    // Execute PHP snippet with error handling
+                    $this->execute_php_frontend($code, $snippet_id);
                 }
             }
         }
@@ -579,9 +580,10 @@ class Sandbox
      * Execute PHP snippet on frontend (actual execution)
      *
      * @param string $code PHP code to execute
+     * @param int $snippet_id Optional snippet ID for error handling
      * @return void
      */
-    private function execute_php_frontend(string $code): void
+    private function execute_php_frontend(string $code, int $snippet_id = 0): void
     {
         // Execute PHP snippet
 
@@ -622,9 +624,55 @@ class Sandbox
             // Restore error handler
             restore_error_handler();
             
+            // Deactivate the snippet to prevent further errors
+            if ($snippet_id > 0) {
+                $this->deactivate_snippet_on_error($snippet_id, $e->getMessage());
+            }
+            
             // Log error in debug mode
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('[ECS] PHP execution error: ' . $e->getMessage()); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+            }
+        }
+    }
+
+    /**
+     * Deactivate a snippet due to execution error
+     *
+     * @param int $snippet_id Snippet ID
+     * @param string $error_message Error message
+     * @return void
+     */
+    private function deactivate_snippet_on_error(int $snippet_id, string $error_message): void
+    {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'ecs_snippets';
+        
+        // Deactivate the snippet
+        $result = $wpdb->update(
+            $table_name,
+            ['active' => 0, 'updated_at' => current_time('mysql')],
+            ['id' => $snippet_id],
+            ['%d', '%s'],
+            ['%d']
+        );
+        
+        if ($result !== false) {
+            // Store notice for admin
+            set_transient(
+                'ecs_snippet_error_' . $snippet_id,
+                [
+                    'snippet_id' => $snippet_id,
+                    'error' => $error_message,
+                    'time' => current_time('mysql')
+                ],
+                HOUR_IN_SECONDS
+            );
+            
+            // Log the deactivation
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("[ECS] Snippet #{$snippet_id} deactivated due to execution error: {$error_message}"); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
             }
         }
     }

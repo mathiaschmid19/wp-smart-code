@@ -80,12 +80,8 @@
         this.handleDeleteSnippet.bind(this)
       );
 
-      // Toggle switch
-      $(document).on(
-        "change",
-        ".ecs-toggle-input",
-        this.handleToggleSnippet.bind(this)
-      );
+      // Toggle switch is handled by admin-snippets.js
+      // Removed duplicate handler that was causing conflicts
 
       // Import button
       $(document).on(

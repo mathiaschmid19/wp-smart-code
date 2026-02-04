@@ -63,6 +63,7 @@ class DB {
 			type VARCHAR(50) NOT NULL,
 			code LONGTEXT NOT NULL,
 			active TINYINT(1) NOT NULL DEFAULT 0,
+			deleted TINYINT(1) NOT NULL DEFAULT 0,
 			mode VARCHAR(20) NOT NULL DEFAULT 'auto_insert',
 			conditions LONGTEXT DEFAULT NULL,
 			author_id BIGINT UNSIGNED NOT NULL,
@@ -70,6 +71,7 @@ class DB {
 			updated_at DATETIME NOT NULL,
 			KEY idx_type (type),
 			KEY idx_active (active),
+			KEY idx_deleted (deleted),
 			KEY idx_mode (mode),
 			KEY idx_author_id (author_id),
 			KEY idx_created_at (created_at)
@@ -136,8 +138,29 @@ class DB {
 			} else {
 				// Mode index added successfully
 			}
-		} else {
 			// Mode column already exists, skipping migration
+		}
+		
+		// Check if deleted column exists
+		$deleted_column_exists = $wpdb->get_results( $wpdb->prepare(
+			"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+			WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'deleted'",
+			DB_NAME,
+			$this->table_name
+		) );
+		
+		if ( empty( $deleted_column_exists ) ) {
+			// Add deleted column
+			$result3 = $wpdb->query( "ALTER TABLE {$this->table_name} ADD COLUMN deleted TINYINT(1) NOT NULL DEFAULT 0 AFTER active" );
+			if ( $result3 === false ) {
+				error_log( '[ECS] Failed to add deleted column: ' . $wpdb->last_error );
+			}
+			
+			// Add index for deleted column
+			$result4 = $wpdb->query( "ALTER TABLE {$this->table_name} ADD KEY idx_deleted (deleted)" );
+			if ( $result4 === false ) {
+				error_log( '[ECS] Failed to add deleted index: ' . $wpdb->last_error );
+			}
 		}
 	}
 

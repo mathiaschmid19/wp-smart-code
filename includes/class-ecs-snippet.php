@@ -251,6 +251,15 @@ class Snippet {
 		try {
 			$table = $this->db->get_table_name();
 
+			// Get the current snippet data before updating (for revision)
+			$current_snippet = $this->get( $id );
+			
+			// Create a revision of the current state before updating
+			// Only create revision if code or title is being changed
+			if ( $current_snippet && ( isset( $data['code'] ) || isset( $data['title'] ) ) ) {
+				$this->create_revision( $id, $current_snippet );
+			}
+
 			$update_data = [];
 			$formats = [];
 
@@ -322,6 +331,31 @@ class Snippet {
 				'snippet_id' => $id,
 				'data' => $data
 			] );
+			return false;
+		}
+	}
+
+	/**
+	 * Create a revision for a snippet.
+	 *
+	 * @param int   $snippet_id Snippet ID.
+	 * @param array $snippet_data Current snippet data.
+	 * @return int|false Revision ID on success, false on failure.
+	 */
+	private function create_revision( int $snippet_id, array $snippet_data ) {
+		try {
+			$revision = new Revision();
+			return $revision->create( $snippet_id, [
+				'title'     => $snippet_data['title'] ?? '',
+				'code'      => $snippet_data['code'] ?? '',
+				'type'      => $snippet_data['type'] ?? 'php',
+				'author_id' => get_current_user_id(),
+			] );
+		} catch ( \Exception $e ) {
+			// Log but don't fail the update if revision creation fails
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( '[ECS] Failed to create revision: ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			}
 			return false;
 		}
 	}

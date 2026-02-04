@@ -106,6 +106,9 @@
       const $checkbox = $(e.currentTarget);
       const $toggleSwitch = $checkbox.closest(".ecs-toggle-switch");
       const snippetId = $checkbox.data("snippet-id");
+      
+      // The checkbox has already changed when 'change' event fires
+      // So we read the NEW state directly from the checkbox
       const newStatus = $checkbox.is(":checked") ? 1 : 0;
 
       // Add loading state
@@ -178,6 +181,8 @@
       $checkbox,
       $toggleSwitch
     ) {
+      console.log('[ECS] Toggle request:', { snippetId, newStatus });
+      
       // Prepare AJAX data
       const ajaxData = {
         action: "ecs_toggle_snippet",
@@ -193,24 +198,27 @@
         data: ajaxData,
         dataType: "json",
         success: (response) => {
+          console.log('[ECS] Toggle response:', response);
+          
           if (response.success) {
-            // Show subtle success feedback
+            // Success! The checkbox is already in the correct state
+            // Just show visual feedback
             $toggleSwitch.addClass("success-flash");
             setTimeout(() => {
               $toggleSwitch.removeClass("success-flash");
             }, 500);
           } else {
-            // Revert checkbox state on error
+            // Error from server - revert checkbox to its previous state
             $checkbox.prop("checked", !newStatus);
             this.showNotice(
-              response.data.message || "Failed to update snippet status.",
+              response.data?.message || "Failed to update snippet status.",
               "error"
             );
           }
         },
         error: (jqXHR, textStatus, errorThrown) => {
-          console.error("AJAX Error:", errorThrown);
-          // Revert checkbox state on error
+          console.error("[ECS] AJAX Error:", { textStatus, errorThrown, response: jqXHR.responseText });
+          // Network error - revert checkbox to its previous state
           $checkbox.prop("checked", !newStatus);
           this.showNotice(
             "An error occurred while updating the snippet status.",

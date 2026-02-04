@@ -133,6 +133,63 @@ class REST extends WP_REST_Controller {
 			]
 		);
 
+		// Get revisions for a snippet - GET /ecs/v1/snippets/{id}/revisions
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base . '/(?P<id>[\d]+)/revisions',
+			[
+				'args' => [
+					'id' => [
+						'description' => __( 'Unique identifier for the snippet.', 'code-snippet' ),
+						'type'        => 'integer',
+					],
+				],
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'get_revisions' ],
+					'permission_callback' => [ $this, 'get_items_permissions_check' ],
+				],
+			]
+		);
+
+		// Get a single revision - GET /ecs/v1/revisions/{id}
+		register_rest_route(
+			$this->namespace,
+			'/revisions/(?P<id>[\d]+)',
+			[
+				'args' => [
+					'id' => [
+						'description' => __( 'Unique identifier for the revision.', 'code-snippet' ),
+						'type'        => 'integer',
+					],
+				],
+				[
+					'methods'             => WP_REST_Server::READABLE,
+					'callback'            => [ $this, 'get_revision' ],
+					'permission_callback' => [ $this, 'get_items_permissions_check' ],
+				],
+			]
+		);
+
+		// Restore a revision - POST /ecs/v1/revisions/{id}/restore
+		register_rest_route(
+			$this->namespace,
+			'/revisions/(?P<id>[\d]+)/restore',
+			[
+				'args' => [
+					'id' => [
+						'description' => __( 'Unique identifier for the revision to restore.', 'code-snippet' ),
+						'type'        => 'integer',
+					],
+				],
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => [ $this, 'restore_revision' ],
+					'permission_callback' => [ $this, 'update_item_permissions_check' ],
+				],
+			]
+		);
+
 		// REST routes registered
 	}
 
@@ -631,6 +688,143 @@ class REST extends WP_REST_Controller {
 		$conditions['post_types'] = $formatted_post_types;
 
 		return rest_ensure_response( $conditions );
+	}
+
+	/**
+	 * Get revisions for a snippet.
+	 *
+	 * @param WP_REST_Request $request Full request data.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	public function get_revisions( $request ) {
+		$snippet_id = (int) $request['id'];
+		
+		// Verify snippet exists
+		$snippet = $this->snippet->get( $snippet_id );
+		if ( ! $snippet ) {
+			return new WP_Error(
+				'ecs_snippet_not_found',
+				__( 'Snippet not found.', 'code-snippet' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		$revision_model = new Revision();
+		$revisions = $revision_model->get_by_snippet( $snippet_id );
+
+		$data = [];
+		foreach ( $revisions as $revision ) {
+			$data[] = [
+				'id'          => intval( $revision['id'] ),
+				'snippet_id'  => intval( $revision['snippet_id'] ),
+				'title'       => $revision['title'],
+				'code'        => $revision['code'],
+				'type'        => $revision['type'],
+				'author_id'   => intval( $revision['author_id'] ),
+				'author_name' => $revision['author_name'] ?? __( 'Unknown', 'code-snippet' ),
+				'created_at'  => $revision['created_at'],
+				'time_ago'    => human_time_diff( strtotime( $revision['created_at'] ), current_time( 'timestamp' ) ) . ' ' . __( 'ago', 'code-snippet' ),
+			];
+		}
+
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * Get a single revision.
+	 *
+	 * @param WP_REST_Request $request Full request data.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	public function get_revision( $request ) {
+		$revision_id = (int) $request['id'];
+
+		$revision_model = new Revision();
+		$revision = $revision_model->get( $revision_id );
+
+		if ( ! $revision ) {
+			return new WP_Error(
+				'ecs_revision_not_found',
+				__( 'Revision not found.', 'code-snippet' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		$data = [
+			'id'          => intval( $revision['id'] ),
+			'snippet_id'  => intval( $revision['snippet_id'] ),
+			'title'       => $revision['title'],
+			'code'        => $revision['code'],
+			'type'        => $revision['type'],
+			'author_id'   => intval( $revision['author_id'] ),
+			'author_name' => $revision['author_name'] ?? __( 'Unknown', 'code-snippet' ),
+			'created_at'  => $revision['created_at'],
+			'time_ago'    => human_time_diff( strtotime( $revision['created_at'] ), current_time( 'timestamp' ) ) . ' ' . __( 'ago', 'code-snippet' ),
+		];
+
+		return rest_ensure_response( $data );
+	}
+
+	/**
+	 * Restore a revision.
+	 *
+	 * @param WP_REST_Request $request Full request data.
+	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
+	 */
+	public function restore_revision( $request ) {
+		$revision_id = (int) $request['id'];
+
+		$revision_model = new Revision();
+		$revision = $revision_model->get( $revision_id );
+
+		if ( ! $revision ) {
+			return new WP_Error(
+				'ecs_revision_not_found',
+				__( 'Revision not found.', 'code-snippet' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		$snippet_id = intval( $revision['snippet_id'] );
+		
+		// Verify snippet exists
+		$snippet = $this->snippet->get( $snippet_id );
+		if ( ! $snippet ) {
+			return new WP_Error(
+				'ecs_snippet_not_found',
+				__( 'Associated snippet not found.', 'code-snippet' ),
+				[ 'status' => 404 ]
+			);
+		}
+
+		// Update the snippet with the revision's code and title
+		$update_data = [
+			'title' => $revision['title'],
+			'code'  => $revision['code'],
+			'type'  => $revision['type'],
+		];
+
+		$result = $this->snippet->update( $snippet_id, $update_data );
+
+		if ( $result === false ) {
+			return new WP_Error(
+				'ecs_restore_failed',
+				__( 'Failed to restore revision.', 'code-snippet' ),
+				[ 'status' => 500 ]
+			);
+		}
+
+		// Get the updated snippet
+		$updated_snippet = $this->snippet->get( $snippet_id );
+		$response_data = $this->prepare_item_for_response( $updated_snippet, $request );
+
+		$response = rest_ensure_response( [
+			'success' => true,
+			'message' => __( 'Revision restored successfully.', 'code-snippet' ),
+			'snippet' => $response_data,
+		] );
+
+		return $response;
 	}
 }
 

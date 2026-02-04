@@ -140,15 +140,22 @@ class Plugin {
 		// Initialize AI AJAX handlers.
 		$this->initialize_ai_ajax();
 
+		// Initialize Admin class early for AJAX handlers.
+		// AJAX requests don't trigger admin_menu, so we need to register handlers earlier.
+		$this->initialize_admin();
+
 		// Register REST API routes.
 		add_action( 'rest_api_init', [ $this, 'initialize_rest_api' ] );
 
 		// Add admin notice for database issues.
 		add_action( 'admin_notices', [ $this, 'check_database_schema' ] );
 
+		// Add admin notice for snippet execution errors.
+		add_action( 'admin_notices', [ $this, 'display_snippet_error_notices' ] );
+
 		// Customize admin footer for our plugin pages.
 		add_action( 'admin_footer', [ $this, 'customize_admin_footer' ] );
-		add_action( 'wp_footer', [ $this, 'customize_admin_footer' ] );
+
 
 		// Plugin initialized
 	}
@@ -259,6 +266,31 @@ class Plugin {
 	}
 
 	/**
+	 * Initialize Admin class for AJAX handlers.
+	 *
+	 * @return void
+	 */
+	public function initialize_admin(): void {
+
+		// Ensure database and models are initialized
+		if ( ! $this->snippet || ! $this->db ) {
+			$this->initialize_db();
+		}
+
+		// Check if we have the snippet model
+		if ( ! $this->snippet ) {
+			return;
+		}
+
+		// Create admin instance if not exists
+		if ( ! $this->admin ) {
+			$this->admin = new Admin( $this->snippet );
+			$this->admin->init(); // Initialize admin hooks (AJAX handlers)
+		}
+
+	}
+
+	/**
 	 * Initialize import/export system.
 	 *
 	 * @return void
@@ -350,6 +382,16 @@ class Plugin {
 			[ $this, 'render_editor_page' ]
 		);
 
+		// Add submenu for library page
+		add_submenu_page(
+			'code-snippet',
+			__( 'Snippet Library', 'code-snippet' ),
+			__( 'Library', 'code-snippet' ),
+			'manage_options',
+			'wp-smart-code-library',
+			[ $this, 'render_library_page' ]
+		);
+
 		// Add submenu for tools page
 		add_submenu_page(
 			'code-snippet',
@@ -381,7 +423,10 @@ class Plugin {
 	 */
 	public function initialize_admin_assets( string $hook ): void {
 		// Only load on our plugin pages
-		if ( 'toplevel_page_code-snippet' !== $hook && 'smart-code_page_wp-smart-code-editor' !== $hook && 'smart-code_page_wp-smart-code-tools' !== $hook ) {
+		if ( 'toplevel_page_code-snippet' !== $hook && 
+			 'smart-code_page_wp-smart-code-editor' !== $hook && 
+			 'smart-code_page_wp-smart-code-tools' !== $hook && 
+			 'smart-code_page_wp-smart-code-library' !== $hook ) {
 			return;
 		}
 
@@ -687,6 +732,28 @@ class Plugin {
 
 		// Include the editor template
 		include ECS_DIR . 'includes/admin/page-snippet-editor.php';
+	}
+
+	/**
+	 * Render snippet library page.
+	 *
+	 * @return void
+	 */
+	public function render_library_page(): void {
+		// Check user capabilities
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'code-snippet' ) );
+		}
+
+		if ( ! $this->snippet ) {
+			wp_die( esc_html__( 'Plugin not properly initialized.', 'code-snippet' ) );
+		}
+
+		// Make admin instance available in template
+		$admin = $this->admin;
+
+		// Include the library template
+		include ECS_DIR . 'includes/admin/page-library.php';
 	}
 
 	/**
@@ -1027,6 +1094,11 @@ class Plugin {
 	 * @return void
 	 */
 	public function customize_admin_footer(): void {
+		// safe check for function existence
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			return;
+		}
+
 		// Only customize footer on our plugin pages
 		$current_screen = get_current_screen();
 		if ( ! $current_screen || ! in_array( $current_screen->id, [
@@ -1080,6 +1152,77 @@ class Plugin {
 		});
 		</script>
 		<?php
+	}
+
+	/**
+	 * Display admin notices for snippets that were deactivated due to errors.
+	 *
+	 * @return void
+	 */
+	public function display_snippet_error_notices(): void {
+		// Only show on our plugin pages - but NOT on the editor page (editor handles its own notices inline)
+		if ( ! function_exists( 'get_current_screen' ) ) {
+			return;
+		}
+
+		$current_screen = get_current_screen();
+		
+		// Skip on editor page - notices are handled inline in the template
+		if ( $current_screen && $current_screen->id === 'smart-code_page_wp-smart-code-editor' ) {
+			return;
+		}
+		
+		if ( ! $current_screen || ! in_array( $current_screen->id, [
+			'toplevel_page_code-snippet',
+			'smart-code_page_wp-smart-code-tools'
+		], true ) ) {
+			return;
+		}
+
+		// Check for any snippet error transients
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'ecs_snippets';
+		
+		// Get all snippet IDs to check for errors
+		$snippet_ids = $wpdb->get_col( "SELECT id FROM {$table_name}" );
+		
+		foreach ( $snippet_ids as $snippet_id ) {
+			$error_data = get_transient( 'ecs_snippet_error_' . $snippet_id );
+			
+			if ( $error_data && is_array( $error_data ) ) {
+				// Get snippet title
+				$snippet = $wpdb->get_row( $wpdb->prepare(
+					"SELECT title FROM {$table_name} WHERE id = %d",
+					$snippet_id
+				) );
+				
+				$snippet_title = $snippet ? $snippet->title : "Snippet #{$snippet_id}";
+				$error_message = $error_data['error'] ?? __( 'Unknown error', 'code-snippet' );
+				$edit_url = admin_url( 'admin.php?page=wp-smart-code-editor&snippet_id=' . $snippet_id );
+				
+				?>
+				<div class="notice notice-error is-dismissible ecs-snippet-error-notice" data-snippet-id="<?php echo esc_attr( $snippet_id ); ?>">
+					<p>
+						<strong><?php esc_html_e( 'WP Smart Code:', 'code-snippet' ); ?></strong>
+						<?php
+						printf(
+							/* translators: %1$s: Snippet title, %2$s: Error message */
+							esc_html__( 'Snippet "%1$s" was deactivated due to an execution error: %2$s', 'code-snippet' ),
+							esc_html( $snippet_title ),
+							esc_html( $error_message )
+						);
+						?>
+						<a href="<?php echo esc_url( $edit_url ); ?>" class="button button-small" style="margin-left: 10px;">
+							<?php esc_html_e( 'Edit Snippet', 'code-snippet' ); ?>
+						</a>
+					</p>
+				</div>
+				<?php
+				
+				// Delete the transient after showing
+				delete_transient( 'ecs_snippet_error_' . $snippet_id );
+			}
+		}
 	}
 
 }

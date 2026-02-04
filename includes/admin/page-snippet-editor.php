@@ -45,11 +45,14 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 
 	<!-- Main Content Area -->
 	<div class="ecs-editor-content">
+		<!-- Notices Container -->
+		<div id="ecs-notices-container">
 		<?php
-		// Display success message
-		if ( isset( $_GET['message'] ) ) {
-			$message_type = sanitize_text_field( wp_unslash( $_GET['message'] ) );
+		// Display success or error message from URL parameter
+		if ( isset( $_GET['message'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$message_type = sanitize_text_field( wp_unslash( $_GET['message'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$message_text = '';
+			$notice_class = 'notice-success';
 			
 			switch ( $message_type ) {
 				case 'updated':
@@ -58,11 +61,21 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 				case 'created':
 					$message_text = __( 'Snippet created successfully.', 'code-snippet' );
 					break;
+				case 'error':
+					$notice_class = 'notice-error';
+					$error_msg = isset( $_GET['error_msg'] ) ? urldecode( sanitize_text_field( wp_unslash( $_GET['error_msg'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+					if ( ! empty( $error_msg ) ) {
+						/* translators: %s: Error message */
+						$message_text = sprintf( __( 'Snippet execution error: %s. The snippet has been saved as inactive.', 'code-snippet' ), $error_msg );
+					} else {
+						$message_text = __( 'Snippet has execution errors and was saved as inactive.', 'code-snippet' );
+					}
+					break;
 			}
 			
 			if ( ! empty( $message_text ) ) {
 				?>
-				<div class="notice notice-success is-dismissible ecs-editor-notice">
+				<div class="notice <?php echo esc_attr( $notice_class ); ?> is-dismissible ecs-editor-notice">
 					<p><?php echo esc_html( $message_text ); ?></p>
 					<button type="button" class="notice-dismiss">
 						<span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'code-snippet' ); ?></span>
@@ -71,7 +84,31 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 				<?php
 			}
 		}
+		
+		// Also check for snippet error transients (for the current snippet being edited)
+		if ( ! empty( $snippet_id ) ) {
+			$error_data = get_transient( 'ecs_snippet_error_' . $snippet_id );
+			if ( $error_data && is_array( $error_data ) ) {
+				$error_message = $error_data['error'] ?? __( 'Unknown error', 'code-snippet' );
+				?>
+				<div class="notice notice-error is-dismissible ecs-editor-notice">
+					<p>
+						<strong><?php esc_html_e( 'Execution Error:', 'code-snippet' ); ?></strong>
+						<?php echo esc_html( $error_message ); ?>
+						<?php esc_html_e( 'The snippet has been deactivated.', 'code-snippet' ); ?>
+					</p>
+					<button type="button" class="notice-dismiss">
+						<span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'code-snippet' ); ?></span>
+					</button>
+				</div>
+				<?php
+				// Delete the transient after showing
+				delete_transient( 'ecs_snippet_error_' . $snippet_id );
+			}
+		}
 		?>
+		</div>
+		
 		
 		<form id="ecs-snippet-editor-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 			<?php wp_nonce_field( 'ecs_save_snippet', 'ecs_snippet_nonce' ); ?>
@@ -321,6 +358,33 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 					</div>
 				</div>
 			</div>
+
+
+			<!-- Revisions Card -->
+			<?php if ( $snippet_id > 0 ) : ?>
+			<div class="ecs-card ecs-revisions-card">
+				<div class="ecs-card-header">
+					<h3 class="ecs-card-title">
+						<?php esc_html_e( 'Revisions', 'code-snippet' ); ?>
+					</h3>
+					<button type="button" id="ecs-refresh-revisions" class="button button-secondary button-small">
+						<?php esc_html_e( 'Refresh', 'code-snippet' ); ?>
+					</button>
+				</div>
+				<div class="ecs-card-content">
+					<p class="ecs-card-description">
+						<?php esc_html_e( 'Restore a previous version of this snippet.', 'code-snippet' ); ?>
+					</p>
+					
+					<div id="ecs-revisions-list" class="ecs-revisions-list">
+						<div class="ecs-loading-placeholder">
+							<span class="spinner is-active" style="float: none; margin: 0;"></span>
+							<?php esc_html_e( 'Loading revisions...', 'code-snippet' ); ?>
+						</div>
+					</div>
+				</div>
+			</div>
+			<?php endif; ?>
 
 			<!-- Hidden fields for conditions -->
 			<input type="hidden" name="conditions" id="ecs-conditions" value="">

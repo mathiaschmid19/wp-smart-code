@@ -110,6 +110,24 @@ class AdminEditor {
 			wp_die( esc_html( $error_message ) );
 		}
 
+		// If activating, perform a dry-run execution to check for runtime errors
+		$snippet_error = null;
+		if ( $active && $type === 'php' ) {
+			// Get sandbox instance
+			$sandbox = Sandbox::get_instance();
+			
+			// Execute in sandbox
+			$execution_result = $sandbox->execute_php( $code );
+			
+			if ( ! $execution_result['success'] ) {
+				// Deactivate if there's an error
+				$active = false;
+				
+				// Store error message for later display
+				$snippet_error = $execution_result['error'];
+			}
+		}
+
 		// Get mode
 		$mode = isset( $_POST['mode'] ) ? sanitize_text_field( wp_unslash( $_POST['mode'] ) ) : 'auto_insert';
 		if ( ! in_array( $mode, [ 'auto_insert', 'shortcode' ], true ) ) {
@@ -137,19 +155,23 @@ class AdminEditor {
 		if ( $snippet_id > 0 ) {
 			// Update existing snippet
 			$result = $this->snippet->update( $snippet_id, $data );
-			if ( ! $result ) {
+			if ( ! $result && $result !== 0 ) {
 				wp_die( esc_html__( 'Failed to update snippet.', 'code-snippet' ) );
 			}
 			
-			// Stay on the same page with success message
-			$redirect_url = add_query_arg(
-				[
-					'page'       => 'wp-smart-code-editor',
-					'snippet_id' => $snippet_id,
-					'message'    => 'updated',
-				],
-				admin_url( 'admin.php' )
-			);
+			// Build redirect URL
+			$redirect_args = [
+				'page'       => 'wp-smart-code-editor',
+				'snippet_id' => $snippet_id,
+				'message'    => $snippet_error ? 'error' : 'updated',
+			];
+			
+			// Add error message if there was an execution error
+			if ( $snippet_error ) {
+				$redirect_args['error_msg'] = urlencode( $snippet_error );
+			}
+			
+			$redirect_url = add_query_arg( $redirect_args, admin_url( 'admin.php' ) );
 		} else {
 			// Create new snippet
 			$new_id = $this->snippet->create( $data );
@@ -157,15 +179,19 @@ class AdminEditor {
 				wp_die( esc_html__( 'Failed to create snippet.', 'code-snippet' ) );
 			}
 			
-			// Redirect to edit the newly created snippet
-			$redirect_url = add_query_arg(
-				[
-					'page'       => 'wp-smart-code-editor',
-					'snippet_id' => $new_id,
-					'message'    => 'created',
-				],
-				admin_url( 'admin.php' )
-			);
+			// Build redirect URL
+			$redirect_args = [
+				'page'       => 'wp-smart-code-editor',
+				'snippet_id' => $new_id,
+				'message'    => $snippet_error ? 'error' : 'created',
+			];
+			
+			// Add error message if there was an execution error
+			if ( $snippet_error ) {
+				$redirect_args['error_msg'] = urlencode( $snippet_error );
+			}
+			
+			$redirect_url = add_query_arg( $redirect_args, admin_url( 'admin.php' ) );
 		}
 
 		// Redirect
