@@ -11,7 +11,7 @@ Say goodbye to editing `functions.php` or risking site crashes. WP Smart Code pr
 *  **Improve Code:** Have existing code? The AI can optimize it for performance, security, and readability.
 *  **Explain Code:** Don't understand a snippet? The AI will explain exactly what it does line-by-line.
 
-## ✨ Key Features
+## Key Features
 
 - ✅ **AI Coding Assistant** — Generate, improve, and understand code instantly
 - ✅ **Revision System** — Timeline view with diff comparison and one-click restore
