@@ -183,8 +183,6 @@ class Plugin {
 	public function prepare_directories(): void {
 		$directories = [
 			'admin'      => ECS_DIR . 'admin',
-			'rest'       => ECS_DIR . 'rest',
-			'db'         => ECS_DIR . 'db',
 			'languages'  => ECS_DIR . 'languages',
 			'assets'     => ECS_DIR . 'assets',
 			'assets-js'  => ECS_DIR . 'assets/js',
