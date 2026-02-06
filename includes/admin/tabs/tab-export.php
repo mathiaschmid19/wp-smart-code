@@ -20,9 +20,9 @@ $active_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_name WHERE active =
 ?>
 <div class="ecs-tools-panel">
 	<div class="ecs-tools-header">
-		<h2><?php esc_html_e( 'Export Snippets', 'code-snippet' ); ?></h2>
+		<h2><?php esc_html_e( 'Export Snippets', 'wp-smart-code' ); ?></h2>
 		<p class="description">
-			<?php esc_html_e( 'Export your snippets to a JSON file for backup or migration to another site.', 'code-snippet' ); ?>
+			<?php esc_html_e( 'Export your snippets to a JSON file for backup or migration to another site.', 'wp-smart-code' ); ?>
 		</p>
 	</div>
 
@@ -31,57 +31,57 @@ $active_count = $wpdb->get_var( "SELECT COUNT(*) FROM $table_name WHERE active =
 			<div class="ecs-stat-card">
 				<div class="ecs-stat-content">
 					<h3><?php echo esc_html( $total_count ); ?></h3>
-					<p><?php esc_html_e( 'Total Snippets', 'code-snippet' ); ?></p>
+					<p><?php esc_html_e( 'Total Snippets', 'wp-smart-code' ); ?></p>
 				</div>
 			</div>
 			<div class="ecs-stat-card">
 				<div class="ecs-stat-content">
 					<h3><?php echo esc_html( $active_count ); ?></h3>
-					<p><?php esc_html_e( 'Active Snippets', 'code-snippet' ); ?></p>
+					<p><?php esc_html_e( 'Active Snippets', 'wp-smart-code' ); ?></p>
 				</div>
 			</div>
 		</div>
 
 		<div class="ecs-export-options">
-			<h3><?php esc_html_e( 'Export Options', 'code-snippet' ); ?></h3>
+			<h3><?php esc_html_e( 'Export Options', 'wp-smart-code' ); ?></h3>
 			
 			<div class="ecs-export-option-card">
 				<div class="ecs-export-option-header">
 					<h4>
-						<?php esc_html_e( 'Export All Snippets', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Export All Snippets', 'wp-smart-code' ); ?>
 					</h4>
 				</div>
 				<p class="description">
-					<?php esc_html_e( 'Export all snippets (active and inactive) to a single JSON file.', 'code-snippet' ); ?>
+					<?php esc_html_e( 'Export all snippets (active and inactive) to a single JSON file.', 'wp-smart-code' ); ?>
 				</p>
 				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecs_export_snippets&include_inactive=1' ), 'ecs_export_snippets' ) ); ?>" class="button button-primary button-large">
-					<?php esc_html_e( 'Export All Snippets', 'code-snippet' ); ?>
+					<?php esc_html_e( 'Export All Snippets', 'wp-smart-code' ); ?>
 				</a>
 			</div>
 
 			<div class="ecs-export-option-card">
 				<div class="ecs-export-option-header">
 					<h4>
-						<?php esc_html_e( 'Export Active Only', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Export Active Only', 'wp-smart-code' ); ?>
 					</h4>
 				</div>
 				<p class="description">
-					<?php esc_html_e( 'Export only active snippets, excluding inactive ones.', 'code-snippet' ); ?>
+					<?php esc_html_e( 'Export only active snippets, excluding inactive ones.', 'wp-smart-code' ); ?>
 				</p>
 				<a href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=ecs_export_snippets&include_inactive=0' ), 'ecs_export_snippets' ) ); ?>" class="button button-secondary button-large">
-					<?php esc_html_e( 'Export Active Snippets', 'code-snippet' ); ?>
+					<?php esc_html_e( 'Export Active Snippets', 'wp-smart-code' ); ?>
 				</a>
 			</div>
 		</div>
 
 		<div class="ecs-tools-info">
-			<h3><?php esc_html_e( 'Export Information', 'code-snippet' ); ?></h3>
+			<h3><?php esc_html_e( 'Export Information', 'wp-smart-code' ); ?></h3>
 			<ul>
-				<li><?php esc_html_e( '📦 Exported files are in JSON format', 'code-snippet' ); ?></li>
-				<li><?php esc_html_e( '📝 Includes snippet code, settings, and conditions', 'code-snippet' ); ?></li>
-				<li><?php esc_html_e( '🔒 Keep exports secure - they contain your code', 'code-snippet' ); ?></li>
-				<li><?php esc_html_e( '💾 Regular exports recommended for backup purposes', 'code-snippet' ); ?></li>
-				<li><?php esc_html_e( '🔄 Exports are compatible with Edge Code Snippets v1.0+', 'code-snippet' ); ?></li>
+				<li><?php esc_html_e( '📦 Exported files are in JSON format', 'wp-smart-code' ); ?></li>
+				<li><?php esc_html_e( '📝 Includes snippet code, settings, and conditions', 'wp-smart-code' ); ?></li>
+				<li><?php esc_html_e( '🔒 Keep exports secure - they contain your code', 'wp-smart-code' ); ?></li>
+				<li><?php esc_html_e( '💾 Regular exports recommended for backup purposes', 'wp-smart-code' ); ?></li>
+				<li><?php esc_html_e( '🔄 Exports are compatible with Edge Code Snippets v1.0+', 'wp-smart-code' ); ?></li>
 			</ul>
 		</div>
 	</div>

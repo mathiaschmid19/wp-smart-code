@@ -21,6 +21,7 @@
      */
     init: function () {
       this.initCodeEditor();
+      this.initThemeSelector();
       this.attachEventListeners();
       this.autoGenerateSlug();
       this.toggleShortcodeMode($("#ecs-snippet-type").val());
@@ -50,7 +51,7 @@
         indentUnit: 2,
         tabSize: 2,
         indentWithTabs: false, // Use spaces for better consistency
-        theme: "default",
+        theme: localStorage.getItem("ecs-editor-theme") || "default",
         autoCloseBrackets: true,
         matchBrackets: true,
         autoCloseTags: true,
@@ -111,10 +112,13 @@
           .getWrapperElement()
           .classList.add("ecs-enhanced-editor");
 
-        // Add paste event handler to remove PHP opening tags
+        // Add paste event handler to clean up pasted content
         this.codeMirror.codemirror.on("paste", (cm, event) => {
           // Use setTimeout to process the pasted content after it's inserted
           setTimeout(() => {
+            // Check and decode HTML entities first
+            this.checkAndDecodeEntities(cm);
+            // Then remove PHP opening tags if present
             this.removePhpOpeningTag(cm);
           }, 10);
         });
@@ -158,6 +162,106 @@
           "PHP opening tag automatically removed from pasted content."
         );
       }
+    },
+
+    /**
+     * Detect if code contains HTML entities
+     */
+    hasHtmlEntities: function (code) {
+      // Common HTML entity patterns
+      const entityPatterns = [
+        /&amp;/g,           // &amp; -> &
+        /&lt;/g,            // &lt; -> <
+        /&gt;/g,            // &gt; -> >
+        /&quot;/g,          // &quot; -> "
+        /&#0?39;/g,         // &#039; or &#39; -> '
+        /&apos;/g,          // &apos; -> '
+        /&#\d+;/g,          // Numeric entities like &#60;
+        /&[a-zA-Z]+;/g,     // Named entities like &nbsp;
+      ];
+      
+      for (const pattern of entityPatterns) {
+        if (pattern.test(code)) {
+          return true;
+        }
+      }
+      return false;
+    },
+
+    /**
+     * Decode HTML entities in code
+     */
+    decodeHtmlEntities: function (code) {
+      // Create a textarea element to leverage browser's HTML decoding
+      const textarea = document.createElement("textarea");
+      
+      // Decode multiple times to handle double/triple encoded entities
+      let decoded = code;
+      let previousDecoded = "";
+      let iterations = 0;
+      const maxIterations = 5; // Prevent infinite loops
+      
+      while (decoded !== previousDecoded && iterations < maxIterations) {
+        previousDecoded = decoded;
+        textarea.innerHTML = decoded;
+        decoded = textarea.value;
+        iterations++;
+      }
+      
+      return {
+        decoded: decoded,
+        wasDecoded: decoded !== code,
+        iterations: iterations - 1, // Number of actual decode passes
+      };
+    },
+
+    /**
+     * Check and decode HTML entities in editor content
+     */
+    checkAndDecodeEntities: function (cm, showNotification = true) {
+      const content = cm.getValue();
+      
+      if (this.hasHtmlEntities(content)) {
+        const result = this.decodeHtmlEntities(content);
+        
+        if (result.wasDecoded) {
+          // Update the editor content
+          const cursor = cm.getCursor();
+          cm.setValue(result.decoded);
+          cm.setCursor(cursor);
+          
+          if (showNotification) {
+            const message = result.iterations > 1
+              ? `HTML entities detected and decoded automatically (${result.iterations} decode passes applied).`
+              : "HTML entities detected and decoded automatically.";
+            
+            this.showNotice("info", "🔧 " + message);
+          }
+          
+          return true;
+        }
+      }
+      return false;
+    },
+
+    /**
+     * Initialize theme selector
+     */
+    initThemeSelector: function () {
+      const savedTheme = localStorage.getItem("ecs-editor-theme") || "default";
+      $("#ecs-editor-theme").val(savedTheme);
+      
+      $("#ecs-editor-theme").on("change", (e) => {
+        const newTheme = $(e.target).val();
+        
+        // Update localStorage
+        localStorage.setItem("ecs-editor-theme", newTheme);
+        
+        // Update CodeMirror instance
+        if (this.codeMirror && this.codeMirror.codemirror) {
+          this.codeMirror.codemirror.setOption("theme", newTheme);
+        }
+      });
     },
 
     /**
@@ -447,6 +551,12 @@
       // Sync CodeMirror content back to textarea first
       if (this.codeMirror && this.codeMirror.codemirror) {
         this.codeMirror.codemirror.save();
+        
+        // Check and auto-decode HTML entities before saving
+        if (this.checkAndDecodeEntities(this.codeMirror.codemirror)) {
+          // Re-sync after decoding
+          this.codeMirror.codemirror.save();
+        }
       }
 
       // Custom validation for title
@@ -476,12 +586,22 @@
       const snippetId = $('input[name="snippet_id"]').val();
       const isNew = !snippetId || snippetId === "0";
 
+      // Process tags - convert comma-separated string to JSON array
+      const tagsInput = $("#ecs-snippet-tags").val() || "";
+      const tagsArray = tagsInput
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0);
+      const tagsJson = tagsArray.length > 0 ? JSON.stringify(tagsArray) : null;
+
       const data = {
         title: title,
         slug: $("#ecs-snippet-slug").val() || this.generateSlug(title),
         type: $("#ecs-snippet-type").val(),
         code: code,
         active: $("#ecs-snippet-active").is(":checked"),
+        tags: tagsJson,
+        skip_validation: $("#ecs-skip-validation").is(":checked"),
       };
 
       const method = isNew ? "POST" : "PUT";
@@ -592,8 +712,8 @@
      * Show notice
      */
     showNotice: function (type, message) {
-      // Remove existing notices
-      $(".ecs-notice").remove();
+      // Remove existing notices of the same type to avoid stacking
+      $(`.ecs-notice.notice-${type}`).remove();
 
       // Create notice
       const $notice = $("<div>", {
@@ -615,22 +735,12 @@
         $(".ecs-editor-page .ecs-page-header").after($notice);
       }
 
-      // Handle dismiss
+      // Handle dismiss - manual only, no auto-dismiss
       $notice.find(".notice-dismiss").on("click", function () {
         $notice.fadeOut(200, function () {
           $(this).remove();
         });
       });
-
-      // Auto-dismiss after 5 seconds - but only for success/info notices, NOT errors
-      // Error notices should stay visible until manually dismissed
-      if (type !== "error") {
-        setTimeout(() => {
-          $notice.fadeOut(200, function () {
-            $(this).remove();
-          });
-        }, 5000);
-      }
 
       // Scroll to notice
       $("html, body").animate(
@@ -1047,9 +1157,8 @@
         `);
       }
     },
-
     /**
-     * Render revisions list
+     * Render revisions list with WordPress-like UI
      */
     renderRevisions: function (revisions) {
       const container = $("#ecs-revisions-list");
@@ -1057,60 +1166,215 @@
       if (!revisions || revisions.length === 0) {
         container.html(`
           <div class="ecs-no-revisions">
+            <span class="dashicons dashicons-backup"></span>
             <p>No revisions found for this snippet.</p>
+            <p class="description">Revisions are created automatically when you save changes.</p>
           </div>
         `);
         return;
       }
 
-      let html = '<ul class="ecs-revisions-timeline">';
+      // Store revisions for diff comparison
+      this.revisions = revisions;
 
-      revisions.forEach((rev) => {
+      let html = `
+        <div class="ecs-revisions-header">
+          <span class="ecs-revisions-count">${revisions.length} revision${revisions.length > 1 ? 's' : ''}</span>
+        </div>
+        <ul class="ecs-revisions-timeline">
+      `;
+
+      revisions.forEach((rev, index) => {
+        const isCurrent = index === 0;
         html += `
-          <li class="ecs-revision-item">
-            <div class="ecs-revision-info">
-              <span class="ecs-revision-author">
-                <strong>${rev.author_name}</strong>
-              </span>
-              <span class="ecs-revision-meta">
-                ${rev.time_ago} (${rev.created_at})
-              </span>
-              <span class="ecs-revision-title">
-                ${rev.title}
-              </span>
+          <li class="ecs-revision-item ${isCurrent ? 'ecs-revision-current' : ''}" data-revision-id="${rev.id}">
+            <div class="ecs-revision-marker">
+              <span class="ecs-revision-dot"></span>
+              ${!isCurrent ? '<span class="ecs-revision-line"></span>' : ''}
             </div>
-            <div class="ecs-revision-actions">
-              <button type="button" class="button button-small ecs-restore-revision" data-id="${rev.id}">
-                Restore
-              </button>
+            <div class="ecs-revision-content">
+              <div class="ecs-revision-header">
+                <span class="ecs-revision-avatar">
+                  <span class="dashicons dashicons-admin-users"></span>
+                </span>
+                <div class="ecs-revision-meta">
+                  <strong class="ecs-revision-author">${rev.author_name}</strong>
+                  <span class="ecs-revision-time">${rev.time_ago}</span>
+                  ${isCurrent ? '<span class="ecs-revision-badge">Current</span>' : ''}
+                </div>
+              </div>
+              <div class="ecs-revision-details">
+                <span class="ecs-revision-date">${rev.created_at}</span>
+                <span class="ecs-revision-title-preview">"${this.truncateText(rev.title, 50)}"</span>
+              </div>
+              <div class="ecs-revision-actions">
+                ${!isCurrent ? `
+                  <button type="button" class="button button-small ecs-preview-revision" data-id="${rev.id}" data-index="${index}">
+                    <span class="dashicons dashicons-visibility"></span> Compare
+                  </button>
+                  <button type="button" class="button button-small button-primary ecs-restore-revision" data-id="${rev.id}">
+                    <span class="dashicons dashicons-backup"></span> Restore
+                  </button>
+                ` : `
+                  <span class="ecs-current-version-notice">This is the current version</span>
+                `}
+              </div>
             </div>
           </li>
         `;
       });
 
       html += "</ul>";
+      
+      // Add the diff modal
+      html += `
+        <div id="ecs-revision-diff-modal" class="ecs-modal" style="display: none;">
+          <div class="ecs-modal-overlay"></div>
+          <div class="ecs-modal-content ecs-diff-modal-content">
+            <div class="ecs-modal-header">
+              <h3><span class="dashicons dashicons-editor-code"></span> Compare Revisions</h3>
+              <button type="button" class="ecs-modal-close">&times;</button>
+            </div>
+            <div class="ecs-modal-body">
+              <div class="ecs-diff-info">
+                <div class="ecs-diff-from">
+                  <span class="dashicons dashicons-arrow-left-alt"></span>
+                  <strong>Selected Revision:</strong>
+                  <span id="ecs-diff-from-info"></span>
+                </div>
+                <div class="ecs-diff-to">
+                  <span class="dashicons dashicons-arrow-right-alt"></span>
+                  <strong>Current Version:</strong>
+                  <span id="ecs-diff-to-info"></span>
+                </div>
+              </div>
+              <div class="ecs-diff-container">
+                <div class="ecs-diff-pane ecs-diff-old">
+                  <div class="ecs-diff-pane-header">
+                    <span class="dashicons dashicons-backup"></span> Old Version
+                  </div>
+                  <pre id="ecs-diff-old-code" class="ecs-diff-code"></pre>
+                </div>
+                <div class="ecs-diff-pane ecs-diff-new">
+                  <div class="ecs-diff-pane-header">
+                    <span class="dashicons dashicons-yes-alt"></span> Current Version
+                  </div>
+                  <pre id="ecs-diff-new-code" class="ecs-diff-code"></pre>
+                </div>
+              </div>
+            </div>
+            <div class="ecs-modal-footer">
+              <button type="button" class="button ecs-modal-cancel">Cancel</button>
+              <button type="button" class="button button-primary ecs-restore-from-modal" id="ecs-restore-from-modal">
+                <span class="dashicons dashicons-backup"></span> Restore This Version
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
       container.html(html);
+      
+      // Attach modal event handlers
+      this.attachModalHandlers();
     },
 
     /**
-     * Restore a revision
+     * Truncate text helper
      */
-    restoreRevision: async function (e) {
-      e.preventDefault();
-      const btn = $(e.currentTarget);
-      const revisionId = btn.data("id");
+    truncateText: function (text, maxLength) {
+      if (!text) return '';
+      return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    },
 
-      if (
-        !confirm(
-          "Are you sure you want to restore this version? This will overwrite the current code and title."
-        )
-      ) {
+    /**
+     * Attach modal event handlers
+     */
+    attachModalHandlers: function () {
+      const modal = $("#ecs-revision-diff-modal");
+      
+      // Preview/Compare button
+      $("#ecs-revisions-list").on("click", ".ecs-preview-revision", (e) => {
+        e.preventDefault();
+        const btn = $(e.currentTarget);
+        const revisionId = btn.data("id");
+        const revisionIndex = btn.data("index");
+        this.showDiffModal(revisionId, revisionIndex);
+      });
+      
+      // Close modal
+      modal.find(".ecs-modal-close, .ecs-modal-cancel, .ecs-modal-overlay").on("click", () => {
+        modal.fadeOut(200);
+      });
+      
+      // Escape key to close
+      $(document).on("keydown", (e) => {
+        if (e.key === "Escape" && modal.is(":visible")) {
+          modal.fadeOut(200);
+        }
+      });
+      
+      // Restore from modal
+      modal.find("#ecs-restore-from-modal").on("click", (e) => {
+        const revisionId = $(e.currentTarget).data("revision-id");
+        this.restoreRevisionById(revisionId);
+      });
+    },
+
+    /**
+     * Show diff comparison modal
+     */
+    showDiffModal: function (revisionId, revisionIndex) {
+      const modal = $("#ecs-revision-diff-modal");
+      const revision = this.revisions[revisionIndex];
+      const currentRevision = this.revisions[0];
+      
+      if (!revision || !currentRevision) {
+        ecsEditor.showNotice("error", "Could not load revision data.");
         return;
       }
+      
+      // Set revision info
+      $("#ecs-diff-from-info").html(`${revision.author_name} - ${revision.time_ago}`);
+      $("#ecs-diff-to-info").html(`${currentRevision.author_name} - ${currentRevision.time_ago}`);
+      
+      // Set code with syntax highlighting via escaping
+      const oldCode = this.escapeHtml(revision.code || '');
+      const newCode = this.escapeHtml(currentRevision.code || '');
+      
+      $("#ecs-diff-old-code").html(oldCode);
+      $("#ecs-diff-new-code").html(newCode);
+      
+      // Store revision ID for restore button
+      $("#ecs-restore-from-modal").data("revision-id", revisionId);
+      
+      // Show modal
+      modal.fadeIn(200);
+    },
 
-      // Show loading state
-      btn.addClass("updating-message").prop("disabled", true).text("Restoring...");
+    /**
+     * Escape HTML for display
+     */
+    escapeHtml: function (text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    },
 
+    /**
+     * Restore a revision by ID
+     */
+    restoreRevisionById: async function (revisionId) {
+      if (!confirm("Are you sure you want to restore this version? This will overwrite the current code and title.")) {
+        return;
+      }
+      
+      // Close modal
+      $("#ecs-revision-diff-modal").fadeOut(200);
+      
+      // Show loading
+      ecsEditor.showLoading();
+      
       try {
         const response = await wp.apiFetch({
           path: `/ecs/v1/revisions/${revisionId}/restore`,
@@ -1119,20 +1383,26 @@
 
         ecsEditor.showNotice("success", "Snippet restored successfully! Reloading...");
 
-        // Reload page to show restored content
         setTimeout(() => {
-          // Add message param
           const currentUrl = new URL(window.location.href);
           currentUrl.searchParams.set("message", "restored");
           window.location.href = currentUrl.toString();
         }, 1000);
       } catch (error) {
-        ecsEditor.showNotice(
-          "error",
-          "Failed to restore revision: " + (error.message || "Unknown error")
-        );
-        btn.removeClass("updating-message").prop("disabled", false).text("Restore");
+        ecsEditor.hideLoading();
+        ecsEditor.showNotice("error", "Failed to restore revision: " + (error.message || "Unknown error"));
       }
+    },
+
+    /**
+     * Restore a revision (from list button)
+     */
+    restoreRevision: async function (e) {
+      e.preventDefault();
+      const btn = $(e.currentTarget);
+      const revisionId = btn.data("id");
+      
+      this.restoreRevisionById(revisionId);
     },
   };
 

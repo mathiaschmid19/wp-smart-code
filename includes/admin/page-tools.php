@@ -27,7 +27,7 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['ta
 			</div>
 			<div class="ecs-header-actions">
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=code-snippet' ) ); ?>" class="button">
-					<?php esc_html_e( '← Back to Snippets', 'code-snippet' ); ?>
+					<?php esc_html_e( '← Back to Snippets', 'wp-smart-code' ); ?>
 				</a>
 			</div>
 		</div>
@@ -36,9 +36,9 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['ta
 	<!-- Subheader with Page Title -->
 	<div class="ecs-subheader">
 		<div class="ecs-subheader-content">
-			<h2 class="ecs-page-title"><?php esc_html_e( 'Tools', 'code-snippet' ); ?></h2>
+			<h2 class="ecs-page-title"><?php esc_html_e( 'Tools', 'wp-smart-code' ); ?></h2>
 			<p class="ecs-page-description">
-				<?php esc_html_e( 'Import, export, and manage your code snippets', 'code-snippet' ); ?>
+				<?php esc_html_e( 'Import, export, and manage your code snippets', 'wp-smart-code' ); ?>
 			</p>
 		</div>
 	</div>
@@ -49,19 +49,19 @@ $active_tab = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['ta
 		<nav class="ecs-tab-navigation">
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-smart-code-tools&tab=import' ) ); ?>" 
 			   class="ecs-tab-link <?php echo 'import' === $active_tab ? 'active' : ''; ?>">
-				<?php esc_html_e( 'Import', 'code-snippet' ); ?>
+				<?php esc_html_e( 'Import', 'wp-smart-code' ); ?>
 			</a>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-smart-code-tools&tab=export' ) ); ?>" 
 			   class="ecs-tab-link <?php echo 'export' === $active_tab ? 'active' : ''; ?>">
-				<?php esc_html_e( 'Export', 'code-snippet' ); ?>
+				<?php esc_html_e( 'Export', 'wp-smart-code' ); ?>
 			</a>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-smart-code-tools&tab=ai' ) ); ?>" 
 			   class="ecs-tab-link <?php echo 'ai' === $active_tab ? 'active' : ''; ?>">
-				<?php esc_html_e( 'AI Settings', 'code-snippet' ); ?>
+				<?php esc_html_e( 'AI Settings', 'wp-smart-code' ); ?>
 			</a>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-smart-code-tools&tab=system' ) ); ?>" 
 			   class="ecs-tab-link <?php echo 'system' === $active_tab ? 'active' : ''; ?>">
-				<?php esc_html_e( 'System Info', 'code-snippet' ); ?>
+				<?php esc_html_e( 'System Info', 'wp-smart-code' ); ?>
 			</a>
 		</nav>
 

@@ -402,7 +402,7 @@
         action: "ecs_ai_generate_code",
         prompt: prompt,
         type: type,
-        nonce: ecsData.nonce,
+        nonce: ecsAiData.nonce,
       })
         .done((response) => {
           this.stopWaitingTicker();
@@ -438,7 +438,7 @@
         code: code,
         type: type,
         improvement: improvementType,
-        nonce: ecsData.nonce,
+        nonce: ecsAiData.nonce,
       })
         .done((response) => {
           this.stopWaitingTicker();
@@ -473,7 +473,7 @@
         action: "ecs_ai_explain_code",
         code: code,
         type: type,
-        nonce: ecsData.nonce,
+        nonce: ecsAiData.nonce,
       })
         .done((response) => {
           this.stopWaitingTicker();

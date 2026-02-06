@@ -82,12 +82,12 @@ $library_snippets = [
 				<svg class="ecs-logo-icon" fill="none" height="48" viewBox="0 0 40 48" width="40" xmlns="http://www.w3.org/2000/svg">
 					<path d="m0 9c0-2.76142 2.23858-5 5-5h10c2.7614 0 5 2.23858 5 5v9.8192c.0002.06.0003.1203.0003.1808 0 2.7575 2.2322 4.9936 4.9881 5h.0116 10c2.7614 0 5 2.2386 5 5v10c0 2.7614-2.2386 5-5 5h-10c-2.7614 0-5-2.2386-5-5v-10c0-.0139.0001-.0277.0002-.0416-.0224-2.7422-2.2523-4.9584-4.9999-4.9584-.0129 0-.0258 0-.0387 0h-9.9616c-2.76142 0-5-2.2386-5-5z" fill="#2271b1"/>
 				</svg>
-				<h1 class="ecs-logo-text"><?php esc_html_e( 'Snippet Library', 'code-snippet' ); ?></h1>
+				<h1 class="ecs-logo-text"><?php esc_html_e( 'Snippet Library', 'wp-smart-code' ); ?></h1>
 			</div>
 			
 			<div class="ecs-header-actions">
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=code-snippet' ) ); ?>" class="button button-secondary">
-					<?php esc_html_e( 'Back to Snippets', 'code-snippet' ); ?>
+					<?php esc_html_e( 'Back to Snippets', 'wp-smart-code' ); ?>
 				</a>
 			</div>
 		</div>
@@ -118,7 +118,7 @@ $library_snippets = [
 						<button type="button" class="button button-primary ecs-import-btn" 
 								data-index="<?php echo esc_attr( $index ); ?>">
 							<span class="dashicons dashicons-download"></span>
-							<?php esc_html_e( 'Import', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Import', 'wp-smart-code' ); ?>
 						</button>
 					</div>
 				</div>
@@ -242,7 +242,7 @@ jQuery(document).ready(function($) {
 		};
 		
 		// Set loading state
-		btn.addClass('updating-message').prop('disabled', true).text('<?php esc_html_e( 'Importing...', 'code-snippet' ); ?>');
+		btn.addClass('updating-message').prop('disabled', true).text('<?php esc_html_e( 'Importing...', 'wp-smart-code' ); ?>');
 		
 		try {
 			// API Call
@@ -254,16 +254,16 @@ jQuery(document).ready(function($) {
 			
 			// Success - Show Checked Icon and Text
 			btn.removeClass('button-primary').addClass('button-disabled')
-			   .html('<span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Imported!', 'code-snippet' ); ?>');
+			   .html('<span class="dashicons dashicons-yes-alt"></span> <?php esc_html_e( 'Imported!', 'wp-smart-code' ); ?>');
 			   
 			// Show success notice with Edit button
 			const editUrl = '<?php echo esc_url( admin_url( 'admin.php?page=wp-smart-code-editor&snippet_id=' ) ); ?>' + response.id;
 			const notice = $(`
 				<div class="notice notice-success is-dismissible ecs-editor-notice">
 					<p>
-						<?php esc_html_e( 'Snippet imported successfully!', 'code-snippet' ); ?> 
+						<?php esc_html_e( 'Snippet imported successfully!', 'wp-smart-code' ); ?> 
 						<a href="${editUrl}" class="button button-small" style="margin-left: 10px; vertical-align: middle;">
-							<?php esc_html_e( 'Edit Snippet', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Edit Snippet', 'wp-smart-code' ); ?>
 						</a>
 					</p>
 					<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss</span></button>
@@ -280,7 +280,7 @@ jQuery(document).ready(function($) {
 			
 			const notice = $(`
 				<div class="notice notice-error is-dismissible ecs-editor-notice">
-					<p><?php esc_html_e( 'Failed to import snippet: ', 'code-snippet' ); ?>${error.message}</p>
+					<p><?php esc_html_e( 'Failed to import snippet: ', 'wp-smart-code' ); ?>${error.message}</p>
 					<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss</span></button>
 				</div>
 			`);

@@ -167,7 +167,7 @@ class Plugin {
 	 */
 	public function load_textdomain(): void {
 		load_plugin_textdomain(
-			'code-snippet',
+			'wp-smart-code',
 			false,
 			dirname( ECS_BASENAME ) . '/languages'
 		);
@@ -363,10 +363,10 @@ class Plugin {
 
 		// Register the menu directly as a top-level menu
 		$page_hook = add_menu_page(
-			__( 'Smart Code', 'code-snippet' ),
-			__( 'Smart Code', 'code-snippet' ),
+			__( 'Smart Code', 'wp-smart-code' ),
+			__( 'Smart Code', 'wp-smart-code' ),
 			'manage_options',
-			'code-snippet',
+			'wp-smart-code',
 			[ $this, 'render_admin_page' ],
 			'data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjQ4IiB2aWV3Qm94PSIwIDAgNDAgNDgiIHdpZHRoPSI0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtMCA5YzAtMi43NjE0MiAyLjIzODU4LTUgNS01aDEwYzIuNzYxNCAwIDUgMi4yMzg1OCA1IDV2OS44MTkyYy4wMDAyLjA2LjAwMDMuMTIwMy4wMDAzLjE4MDggMCAyLjc1NzUgMi4yMzIyIDQuOTkzNiA0Ljk4ODEgNWguMDExNiAxMGMyLjc2MTQgMCA1IDIuMjM4NiA1IDV2MTBjMCAyLjc2MTQtMi4yMzg2IDUtNSA1aC0xMGMtMi43NjE0IDAtNS0yLjIzODYtNS01di0xMGMwLS4wMTM5LjAwMDEtLjAyNzcuMDAwMi0uMDQxNi0uMDIyNC0yLjc0MjItMi4yNTIzLTQuOTU4NC00Ljk5OTktNC45NTg0LS4wMTI5IDAtLjAyNTggMC0uMDM4NyAwaC05Ljk2MTZjLTIuNzYxNDIgMC01LTIuMjM4Ni01LTV6IiBmaWxsPSIjZmZmIi8+PC9zdmc+', // Base64 encoded SVG logo
 			30 // Position after Comments
@@ -374,9 +374,9 @@ class Plugin {
 
 		// Add submenu for editor page
 		add_submenu_page(
-			'code-snippet',
-			__( 'Add New Snippet', 'code-snippet' ),
-			__( 'Add New', 'code-snippet' ),
+			'wp-smart-code',
+			__( 'Add New Snippet', 'wp-smart-code' ),
+			__( 'Add New', 'wp-smart-code' ),
 			'manage_options',
 			'wp-smart-code-editor',
 			[ $this, 'render_editor_page' ]
@@ -384,9 +384,9 @@ class Plugin {
 
 		// Add submenu for library page
 		add_submenu_page(
-			'code-snippet',
-			__( 'Snippet Library', 'code-snippet' ),
-			__( 'Library', 'code-snippet' ),
+			'wp-smart-code',
+			__( 'Snippet Library', 'wp-smart-code' ),
+			__( 'Library', 'wp-smart-code' ),
 			'manage_options',
 			'wp-smart-code-library',
 			[ $this, 'render_library_page' ]
@@ -394,9 +394,9 @@ class Plugin {
 
 		// Add submenu for tools page
 		add_submenu_page(
-			'code-snippet',
-			__( 'Tools', 'code-snippet' ),
-			__( 'Tools', 'code-snippet' ),
+			'wp-smart-code',
+			__( 'Tools', 'wp-smart-code' ),
+			__( 'Tools', 'wp-smart-code' ),
 			'manage_options',
 			'wp-smart-code-tools',
 			[ $this, 'render_tools_page' ]
@@ -405,7 +405,7 @@ class Plugin {
 		// Add hidden submenu for database fix page
 		add_submenu_page(
 			'',
-			__( 'Fix Database', 'code-snippet' ),
+			__( 'Fix Database', 'wp-smart-code' ),
 			'',
 			'manage_options',
 			'ecs-fix-database',
@@ -497,6 +497,18 @@ class Plugin {
 				[],
 				'11.9.0'
 			);
+
+			// Enqueue CodeMirror Themes
+			$cm_version = '5.65.16';
+			$themes = [ 'dracula', 'monokai', 'material', 'solarized', 'nord' ];
+			foreach ( $themes as $theme ) {
+				wp_enqueue_style(
+					'codemirror-theme-' . $theme,
+					"https://cdnjs.cloudflare.com/ajax/libs/codemirror/{$cm_version}/theme/{$theme}.min.css",
+					[],
+					$cm_version
+				);
+			}
 			
 			// Editor page JavaScript
 			wp_enqueue_script(
@@ -528,7 +540,7 @@ class Plugin {
 			);
 
 			// Localize AI Assistant script
-			wp_localize_script( 'ecs-ai-assistant', 'ecsData', [
+			wp_localize_script( 'ecs-ai-assistant', 'ecsAiData', [
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'ecs_ai_nonce' ),
 			] );
@@ -551,9 +563,9 @@ class Plugin {
 					'restUrl'  => rest_url(),
 					'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
 					'i18n'     => [
-						'confirmDelete' => __( 'Are you sure you want to delete this snippet?', 'code-snippet' ),
-						'loading'       => __( 'Loading...', 'code-snippet' ),
-						'error'         => __( 'An error occurred.', 'code-snippet' ),
+						'confirmDelete' => __( 'Are you sure you want to delete this snippet?', 'wp-smart-code' ),
+						'loading'       => __( 'Loading...', 'wp-smart-code' ),
+						'error'         => __( 'An error occurred.', 'wp-smart-code' ),
 					],
 				]
 			);
@@ -567,7 +579,7 @@ class Plugin {
 	 */
 	public function handle_single_actions(): void {
 		// Only run on our plugin page
-		if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'code-snippet' ) {
+		if ( ! isset( $_GET['page'] ) || $_GET['page'] !== 'wp-smart-code' ) {
 			return;
 		}
 
@@ -582,24 +594,24 @@ class Plugin {
 
 		// Verify user capability
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'wp-smart-code' ) );
 		}
 
 		// Verify nonce
 		if ( ! wp_verify_nonce( $nonce, $action . '_snippet_' . $id ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Security check failed.', 'wp-smart-code' ) );
 		}
 
 		// Validate action
-		$allowed_actions = [ 'toggle', 'trash', 'restore', 'delete' ];
+		$allowed_actions = [ 'toggle', 'trash', 'restore', 'delete', 'duplicate' ];
 		if ( ! in_array( $action, $allowed_actions, true ) ) {
-			wp_die( esc_html__( 'Invalid action.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Invalid action.', 'wp-smart-code' ) );
 		}
 
 		// Verify snippet exists
 		$snippet = $this->snippet->get( $id );
 		if ( ! $snippet ) {
-			add_settings_error( 'ecs_messages', 'ecs_message', __( 'Snippet not found.', 'code-snippet' ), 'error' );
+			add_settings_error( 'ecs_messages', 'ecs_message', __( 'Snippet not found.', 'wp-smart-code' ), 'error' );
 			wp_safe_redirect( admin_url( 'admin.php?page=code-snippet' ) );
 			exit;
 		}
@@ -613,15 +625,25 @@ class Plugin {
 		$redirect_url = admin_url( 'admin.php?page=code-snippet' );
 
 		switch ( $action ) {
+			case 'duplicate':
+				$new_id = $this->snippet->duplicate( $id );
+				$result = ( $new_id !== false );
+				$message = $result ? __( 'Snippet copied successfully.', 'wp-smart-code' ) : __( 'Failed to copy snippet.', 'wp-smart-code' );
+				// Preserve current view
+				if ( $current_view ) {
+					$redirect_url = add_query_arg( 'view', $current_view, $redirect_url );
+				}
+				break;
+
 			case 'toggle':
 				$new_status = $snippet['active'] ? 0 : 1;
 				$result = $this->snippet->update( $id, [ 'active' => $new_status ] );
 				if ( $result !== false ) {
-					$status_text = $new_status ? __( 'activated', 'code-snippet' ) : __( 'deactivated', 'code-snippet' );
+					$status_text = $new_status ? __( 'activated', 'wp-smart-code' ) : __( 'deactivated', 'wp-smart-code' );
 					/* translators: %s: status text (activated or deactivated) */
-					$message = sprintf( __( 'Snippet %s successfully.', 'code-snippet' ), $status_text );
+					$message = sprintf( __( 'Snippet %s successfully.', 'wp-smart-code' ), $status_text );
 				} else {
-					$message = __( 'Failed to update snippet status.', 'code-snippet' );
+					$message = __( 'Failed to update snippet status.', 'wp-smart-code' );
 				}
 				// Preserve current view
 				if ( $current_view ) {
@@ -631,7 +653,7 @@ class Plugin {
 
 			case 'trash':
 				$result = $this->snippet->soft_delete( $id );
-				$message = $result ? __( 'Snippet moved to trash.', 'code-snippet' ) : __( 'Failed to move snippet to trash.', 'code-snippet' );
+				$message = $result ? __( 'Snippet moved to trash.', 'wp-smart-code' ) : __( 'Failed to move snippet to trash.', 'wp-smart-code' );
 				// Preserve current view
 				if ( $current_view ) {
 					$redirect_url = add_query_arg( 'view', $current_view, $redirect_url );
@@ -640,13 +662,13 @@ class Plugin {
 
 			case 'restore':
 				$result = $this->snippet->restore( $id );
-				$message = $result ? __( 'Snippet restored successfully.', 'code-snippet' ) : __( 'Failed to restore snippet.', 'code-snippet' );
+				$message = $result ? __( 'Snippet restored successfully.', 'wp-smart-code' ) : __( 'Failed to restore snippet.', 'wp-smart-code' );
 				$redirect_url = add_query_arg( 'view', 'trash', $redirect_url );
 				break;
 
 			case 'delete':
 				$result = $this->snippet->delete( $id );
-				$message = $result ? __( 'Snippet deleted permanently.', 'code-snippet' ) : __( 'Failed to delete snippet.', 'code-snippet' );
+				$message = $result ? __( 'Snippet deleted permanently.', 'wp-smart-code' ) : __( 'Failed to delete snippet.', 'wp-smart-code' );
 				$redirect_url = add_query_arg( 'view', 'trash', $redirect_url );
 				break;
 		}
@@ -671,11 +693,11 @@ class Plugin {
 	public function render_admin_page(): void {
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to access this page.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-smart-code' ) );
 		}
 
 		if ( ! $this->snippet ) {
-			wp_die( esc_html__( 'Plugin not properly initialized.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Plugin not properly initialized.', 'wp-smart-code' ) );
 		}
 
 		// Display transient admin notice if exists
@@ -709,11 +731,11 @@ class Plugin {
 	public function render_editor_page(): void {
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to access this page.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-smart-code' ) );
 		}
 
 		if ( ! $this->snippet ) {
-			wp_die( esc_html__( 'Plugin not properly initialized.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Plugin not properly initialized.', 'wp-smart-code' ) );
 		}
 
 		// Get snippet if editing
@@ -723,7 +745,7 @@ class Plugin {
 			$snippet = $this->snippet->get( $snippet_id );
 			
 			if ( ! $snippet ) {
-				wp_die( esc_html__( 'Snippet not found.', 'code-snippet' ) );
+				wp_die( esc_html__( 'Snippet not found.', 'wp-smart-code' ) );
 			}
 		}
 
@@ -742,11 +764,11 @@ class Plugin {
 	public function render_library_page(): void {
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to access this page.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-smart-code' ) );
 		}
 
 		if ( ! $this->snippet ) {
-			wp_die( esc_html__( 'Plugin not properly initialized.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Plugin not properly initialized.', 'wp-smart-code' ) );
 		}
 
 		// Make admin instance available in template
@@ -844,7 +866,7 @@ class Plugin {
 	public function render_tools_page(): void {
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to access this page.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-smart-code' ) );
 		}
 
 		// Make admin instance available in template
@@ -862,7 +884,7 @@ class Plugin {
 	public function render_fix_database_page(): void {
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to access this page.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to access this page.', 'wp-smart-code' ) );
 		}
 
 		global $wpdb;
@@ -893,7 +915,7 @@ class Plugin {
 				);
 
 				if ( $result === false ) {
-					$errors[] = __( 'Failed to add mode column: ', 'code-snippet' ) . $wpdb->last_error;
+					$errors[] = __( 'Failed to add mode column: ', 'wp-smart-code' ) . $wpdb->last_error;
 				} else {
 					$fixed = true;
 
@@ -908,7 +930,7 @@ class Plugin {
 					delete_transient( 'ecs_db_check_dismissed' );
 				}
 			} else {
-				$errors[] = __( 'Mode column already exists.', 'code-snippet' );
+				$errors[] = __( 'Mode column already exists.', 'wp-smart-code' );
 			}
 		}
 
@@ -925,28 +947,28 @@ class Plugin {
 
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Fix Database', 'code-snippet' ); ?></h1>
+			<h1><?php esc_html_e( 'Fix Database', 'wp-smart-code' ); ?></h1>
 
 			<?php if ( $fixed ) : ?>
 				<div class="notice notice-success">
 					<p>
-						<strong><?php esc_html_e( 'Success!', 'code-snippet' ); ?></strong>
-						<?php esc_html_e( 'The database has been fixed. You can now create snippets.', 'code-snippet' ); ?>
+						<strong><?php esc_html_e( 'Success!', 'wp-smart-code' ); ?></strong>
+						<?php esc_html_e( 'The database has been fixed. You can now create snippets.', 'wp-smart-code' ); ?>
 					</p>
 				</div>
 				<p>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=wp-smart-code-editor' ) ); ?>" class="button button-primary">
-						<?php esc_html_e( 'Create a Snippet', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Create a Snippet', 'wp-smart-code' ); ?>
 					</a>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=code-snippet' ) ); ?>" class="button button-secondary">
-						<?php esc_html_e( 'View All Snippets', 'code-snippet' ); ?>
+						<?php esc_html_e( 'View All Snippets', 'wp-smart-code' ); ?>
 					</a>
 				</p>
 			<?php endif; ?>
 
 			<?php if ( ! empty( $errors ) ) : ?>
 				<div class="notice notice-error">
-					<p><strong><?php esc_html_e( 'Errors:', 'code-snippet' ); ?></strong></p>
+					<p><strong><?php esc_html_e( 'Errors:', 'wp-smart-code' ); ?></strong></p>
 					<ul>
 						<?php foreach ( $errors as $error ) : ?>
 							<li><?php echo esc_html( $error ); ?></li>
@@ -958,10 +980,10 @@ class Plugin {
 			<?php if ( ! $has_mode && ! $fixed ) : ?>
 				<div class="notice notice-warning">
 					<p>
-						<strong><?php esc_html_e( 'Database Update Required', 'code-snippet' ); ?></strong>
+						<strong><?php esc_html_e( 'Database Update Required', 'wp-smart-code' ); ?></strong>
 					</p>
 					<p>
-						<?php esc_html_e( 'The database table is missing the "mode" column. Click the button below to fix this automatically.', 'code-snippet' ); ?>
+						<?php esc_html_e( 'The database table is missing the "mode" column. Click the button below to fix this automatically.', 'wp-smart-code' ); ?>
 					</p>
 				</div>
 
@@ -969,27 +991,27 @@ class Plugin {
 					<?php wp_nonce_field( 'ecs_fix_database', 'ecs_fix_nonce' ); ?>
 					<p>
 						<button type="submit" name="ecs_fix_database" class="button button-primary button-large">
-							<?php esc_html_e( 'Fix Database Now', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Fix Database Now', 'wp-smart-code' ); ?>
 						</button>
 					</p>
 				</form>
 			<?php elseif ( $has_mode && ! $fixed ) : ?>
 				<div class="notice notice-success">
 					<p>
-						<strong><?php esc_html_e( 'No issues found!', 'code-snippet' ); ?></strong>
-						<?php esc_html_e( 'The database is up to date.', 'code-snippet' ); ?>
+						<strong><?php esc_html_e( 'No issues found!', 'wp-smart-code' ); ?></strong>
+						<?php esc_html_e( 'The database is up to date.', 'wp-smart-code' ); ?>
 					</p>
 				</div>
 			<?php endif; ?>
 
-			<h2><?php esc_html_e( 'Current Table Structure', 'code-snippet' ); ?></h2>
+			<h2><?php esc_html_e( 'Current Table Structure', 'wp-smart-code' ); ?></h2>
 			<table class="widefat">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Column Name', 'code-snippet' ); ?></th>
-						<th><?php esc_html_e( 'Type', 'code-snippet' ); ?></th>
-						<th><?php esc_html_e( 'Null', 'code-snippet' ); ?></th>
-						<th><?php esc_html_e( 'Default', 'code-snippet' ); ?></th>
+						<th><?php esc_html_e( 'Column Name', 'wp-smart-code' ); ?></th>
+						<th><?php esc_html_e( 'Type', 'wp-smart-code' ); ?></th>
+						<th><?php esc_html_e( 'Null', 'wp-smart-code' ); ?></th>
+						<th><?php esc_html_e( 'Default', 'wp-smart-code' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -1006,7 +1028,7 @@ class Plugin {
 
 			<p>
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=code-snippet' ) ); ?>" class="button">
-					<?php esc_html_e( 'Back to Snippets', 'code-snippet' ); ?>
+					<?php esc_html_e( 'Back to Snippets', 'wp-smart-code' ); ?>
 				</a>
 			</p>
 		</div>
@@ -1059,21 +1081,21 @@ class Plugin {
 			?>
 			<div class="notice notice-error">
 				<p>
-					<strong><?php esc_html_e( 'WP Smart Code - Database Update Required', 'code-snippet' ); ?></strong>
+					<strong><?php esc_html_e( 'WP Smart Code - Database Update Required', 'wp-smart-code' ); ?></strong>
 				</p>
 				<p>
-					<?php esc_html_e( 'The database table is missing the "mode" column. This will cause errors when creating snippets.', 'code-snippet' ); ?>
+					<?php esc_html_e( 'The database table is missing the "mode" column. This will cause errors when creating snippets.', 'wp-smart-code' ); ?>
 				</p>
 				<p>
-					<strong><?php esc_html_e( 'Solution:', 'code-snippet' ); ?></strong>
-					<?php esc_html_e( 'Please deactivate and reactivate the plugin, or click the button below to fix automatically:', 'code-snippet' ); ?>
+					<strong><?php esc_html_e( 'Solution:', 'wp-smart-code' ); ?></strong>
+					<?php esc_html_e( 'Please deactivate and reactivate the plugin, or click the button below to fix automatically:', 'wp-smart-code' ); ?>
 				</p>
 				<p>
 					<a href="<?php echo esc_url( admin_url( 'admin.php?page=ecs-fix-database' ) ); ?>" class="button button-primary">
-						<?php esc_html_e( 'Fix Database Now', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Fix Database Now', 'wp-smart-code' ); ?>
 					</a>
 					<a href="<?php echo esc_url( add_query_arg( 'ecs_dismiss_db_notice', '1' ) ); ?>" class="button button-secondary">
-						<?php esc_html_e( 'Dismiss (I will fix it manually)', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Dismiss (I will fix it manually)', 'wp-smart-code' ); ?>
 					</a>
 				</p>
 			</div>
@@ -1134,7 +1156,7 @@ class Plugin {
 						'<p id="ecs-footer-text">' +
 						'<strong>WP Smart Code</strong> v<?php echo esc_js( $plugin_version ); ?> | ' +
 						'© <?php echo esc_js( $current_year ); ?> <a href="https://amineouhannou.com" target="_blank">Amine Ouhannou</a> | ' +
-						'<a href="https://github.com/mathiaschmid19/wp-smart-code" target="_blank"><?php esc_html_e( 'GitHub', 'code-snippet' ); ?></a>' +
+						'<a href="https://github.com/mathiaschmid19/wp-smart-code" target="_blank"><?php esc_html_e( 'GitHub', 'wp-smart-code' ); ?></a>' +
 						'</p>'
 					);
 					
@@ -1197,23 +1219,23 @@ class Plugin {
 				) );
 				
 				$snippet_title = $snippet ? $snippet->title : "Snippet #{$snippet_id}";
-				$error_message = $error_data['error'] ?? __( 'Unknown error', 'code-snippet' );
+				$error_message = $error_data['error'] ?? __( 'Unknown error', 'wp-smart-code' );
 				$edit_url = admin_url( 'admin.php?page=wp-smart-code-editor&snippet_id=' . $snippet_id );
 				
 				?>
 				<div class="notice notice-error is-dismissible ecs-snippet-error-notice" data-snippet-id="<?php echo esc_attr( $snippet_id ); ?>">
 					<p>
-						<strong><?php esc_html_e( 'WP Smart Code:', 'code-snippet' ); ?></strong>
+						<strong><?php esc_html_e( 'WP Smart Code:', 'wp-smart-code' ); ?></strong>
 						<?php
 						printf(
 							/* translators: %1$s: Snippet title, %2$s: Error message */
-							esc_html__( 'Snippet "%1$s" was deactivated due to an execution error: %2$s', 'code-snippet' ),
+							esc_html__( 'Snippet "%1$s" was deactivated due to an execution error: %2$s', 'wp-smart-code' ),
 							esc_html( $snippet_title ),
 							esc_html( $error_message )
 						);
 						?>
 						<a href="<?php echo esc_url( $edit_url ); ?>" class="button button-small" style="margin-left: 10px;">
-							<?php esc_html_e( 'Edit Snippet', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Edit Snippet', 'wp-smart-code' ); ?>
 						</a>
 					</p>
 				</div>
