@@ -22,7 +22,7 @@ $type = $is_new ? 'php' : esc_attr( $snippet['type'] );
 $code = $is_new ? '' : esc_textarea( $snippet['code'] );
 $tags = $is_new ? '' : implode( ', ', json_decode( $snippet['tags'] ?? '[]', true ) ?? [] );
 $active = $is_new ? false : (bool) $snippet['active'];
-$page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snippet', 'code-snippet' );
+$page_title = $is_new ? __( 'Add New Snippet', 'wp-smart-code' ) : __( 'Edit Snippet', 'wp-smart-code' );
 
 ?>
 <div class="wrap ecs-admin-page ecs-editor-page">
@@ -35,10 +35,10 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 			</div>
 			<div class="ecs-header-actions">
 				<a href="<?php echo esc_url( admin_url( 'admin.php?page=code-snippet' ) ); ?>" class="button">
-					<?php esc_html_e( '← Back to Snippets', 'code-snippet' ); ?>
+					<?php esc_html_e( '← Back to Snippets', 'wp-smart-code' ); ?>
 				</a>
 				<button type="submit" form="ecs-snippet-editor-form" class="button button-primary button-large">
-					<?php echo $is_new ? esc_html__( 'Publish', 'code-snippet' ) : esc_html__( 'Update', 'code-snippet' ); ?>
+					<?php echo $is_new ? esc_html__( 'Publish', 'wp-smart-code' ) : esc_html__( 'Update', 'wp-smart-code' ); ?>
 				</button>
 			</div>
 		</div>
@@ -57,19 +57,19 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 			
 			switch ( $message_type ) {
 				case 'updated':
-					$message_text = __( 'Snippet updated successfully.', 'code-snippet' );
+					$message_text = __( 'Snippet updated successfully.', 'wp-smart-code' );
 					break;
 				case 'created':
-					$message_text = __( 'Snippet created successfully.', 'code-snippet' );
+					$message_text = __( 'Snippet created successfully.', 'wp-smart-code' );
 					break;
 				case 'error':
 					$notice_class = 'notice-error';
 					$error_msg = isset( $_GET['error_msg'] ) ? urldecode( sanitize_text_field( wp_unslash( $_GET['error_msg'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 					if ( ! empty( $error_msg ) ) {
 						/* translators: %s: Error message */
-						$message_text = sprintf( __( 'Snippet execution error: %s. The snippet has been saved as inactive.', 'code-snippet' ), $error_msg );
+						$message_text = sprintf( __( 'Snippet execution error: %s. The snippet has been saved as inactive.', 'wp-smart-code' ), $error_msg );
 					} else {
-						$message_text = __( 'Snippet has execution errors and was saved as inactive.', 'code-snippet' );
+						$message_text = __( 'Snippet has execution errors and was saved as inactive.', 'wp-smart-code' );
 					}
 					break;
 			}
@@ -79,7 +79,7 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 				<div class="notice <?php echo esc_attr( $notice_class ); ?> is-dismissible ecs-editor-notice">
 					<p><?php echo esc_html( $message_text ); ?></p>
 					<button type="button" class="notice-dismiss">
-						<span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'code-snippet' ); ?></span>
+						<span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'wp-smart-code' ); ?></span>
 					</button>
 				</div>
 				<?php
@@ -90,16 +90,16 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 		if ( ! empty( $snippet_id ) ) {
 			$error_data = get_transient( 'ecs_snippet_error_' . $snippet_id );
 			if ( $error_data && is_array( $error_data ) ) {
-				$error_message = $error_data['error'] ?? __( 'Unknown error', 'code-snippet' );
+				$error_message = $error_data['error'] ?? __( 'Unknown error', 'wp-smart-code' );
 				?>
 				<div class="notice notice-error is-dismissible ecs-editor-notice">
 					<p>
-						<strong><?php esc_html_e( 'Execution Error:', 'code-snippet' ); ?></strong>
+						<strong><?php esc_html_e( 'Execution Error:', 'wp-smart-code' ); ?></strong>
 						<?php echo esc_html( $error_message ); ?>
-						<?php esc_html_e( 'The snippet has been deactivated.', 'code-snippet' ); ?>
+						<?php esc_html_e( 'The snippet has been deactivated.', 'wp-smart-code' ); ?>
 					</p>
 					<button type="button" class="notice-dismiss">
-						<span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'code-snippet' ); ?></span>
+						<span class="screen-reader-text"><?php esc_html_e( 'Dismiss this notice.', 'wp-smart-code' ); ?></span>
 					</button>
 				</div>
 				<?php
@@ -122,14 +122,14 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 					<div class="ecs-title-row">
 						<div class="ecs-title-field">
 							<label for="ecs-snippet-title" class="ecs-label">
-								<?php esc_html_e( 'Snippet Title', 'code-snippet' ); ?>
+								<?php esc_html_e( 'Snippet Title', 'wp-smart-code' ); ?>
 							</label>
 							<input 
 								type="text" 
 								id="ecs-snippet-title" 
 								name="title" 
 								class="ecs-input ecs-input-large" 
-								placeholder="<?php esc_attr_e( 'Add title for snippet', 'code-snippet' ); ?>"
+								placeholder="<?php esc_attr_e( 'Add title for snippet', 'wp-smart-code' ); ?>"
 								value="<?php echo esc_attr( $title ); ?>"
 								required
 							>
@@ -148,7 +148,7 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 								<span class="ecs-toggle-slider"></span>
 							</label>
 							<span class="ecs-toggle-label" id="ecs-status-text">
-								<?php echo $active ? esc_html__( 'Active', 'code-snippet' ) : esc_html__( 'Inactive', 'code-snippet' ); ?>
+								<?php echo $active ? esc_html__( 'Active', 'wp-smart-code' ) : esc_html__( 'Inactive', 'wp-smart-code' ); ?>
 							</span>
 						</div>
 					</div>
@@ -160,9 +160,17 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 			<div class="ecs-card ecs-card-code">
 				<div class="ecs-card-header">
 					<h3 class="ecs-card-title">
-						<?php esc_html_e( 'Code', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Code', 'wp-smart-code' ); ?>
 					</h3>
 					<div class="ecs-code-header-actions">
+						<select id="ecs-editor-theme" class="ecs-select" style="margin-right: 10px;">
+							<option value="default"><?php esc_html_e( 'Light', 'wp-smart-code' ); ?></option>
+							<option value="dracula">Dracula</option>
+							<option value="monokai">Monokai</option>
+							<option value="material">Material</option>
+							<option value="solarized dark">Solarized Dark</option>
+							<option value="nord">Nord</option>
+						</select>
 						<select id="ecs-snippet-type" name="type" class="ecs-type-select">
 							<option value="php" <?php selected( $type, 'php' ); ?>>PHP</option>
 							<option value="js" <?php selected( $type, 'js' ); ?>>JavaScript</option>
@@ -172,6 +180,10 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 						<button type="button" id="ecs-toggle-ai-assistant" class="button button-secondary ecs-ai-toggle-btn">
 							🤖 AI Assistant
 						</button>
+						<label class="ecs-skip-validation-label" title="<?php esc_attr_e( 'Skip syntax validation when saving. Use with caution!', 'wp-smart-code' ); ?>">
+							<input type="checkbox" id="ecs-skip-validation" name="skip_validation" value="1">
+							<?php esc_html_e( 'Skip Check', 'wp-smart-code' ); ?>
+						</label>
 					</div>
 				</div>
 				<div class="ecs-code-editor-wrapper">
@@ -179,7 +191,7 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 						id="ecs-snippet-code" 
 						name="code" 
 						class="ecs-code-editor" 
-						placeholder="<?php esc_attr_e( 'Enter your code here...', 'code-snippet' ); ?>"
+						placeholder="<?php esc_attr_e( 'Enter your code here...', 'wp-smart-code' ); ?>"
 					><?php echo esc_textarea( $code ); ?></textarea>
 				</div>
 			</div>
@@ -189,13 +201,13 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 			<div class="ecs-card">
 				<div class="ecs-card-header">
 					<h3 class="ecs-card-title">
-						<?php esc_html_e( 'Tags', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Tags', 'wp-smart-code' ); ?>
 					</h3>
 				</div>
 				<div class="ecs-card-content">
-					<input type="text" name="tags" id="ecs-snippet-tags" class="large-text" value="<?php echo esc_attr( $tags ); ?>" placeholder="<?php esc_attr_e( 'Separate tags with commas', 'code-snippet' ); ?>">
+					<input type="text" name="tags" id="ecs-snippet-tags" class="large-text" value="<?php echo esc_attr( $tags ); ?>" placeholder="<?php esc_attr_e( 'Separate tags with commas', 'wp-smart-code' ); ?>">
 					<p class="description" style="margin-top: 8px;">
-						<?php esc_html_e( 'Used for filtering and organizing snippets.', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Used for filtering and organizing snippets.', 'wp-smart-code' ); ?>
 					</p>
 				</div>
 			</div>
@@ -204,12 +216,12 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 			<div class="ecs-card">
 				<div class="ecs-card-header">
 					<h3 class="ecs-card-title">
-						<?php esc_html_e( 'Insertion', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Insertion', 'wp-smart-code' ); ?>
 					</h3>
 				</div>
 				<div class="ecs-card-content">
 					<p class="ecs-card-description">
-						<?php esc_html_e( 'Choose "Auto Insert" if you want the snippet to be automatically executed in one of the locations available. In "Shortcode" mode, the snippet will only be executed where the shortcode is inserted.', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Choose "Auto Insert" if you want the snippet to be automatically executed in one of the locations available. In "Shortcode" mode, the snippet will only be executed where the shortcode is inserted.', 'wp-smart-code' ); ?>
 					</p>
 					
 					<?php
@@ -222,8 +234,8 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 							<input type="radio" name="mode" value="auto_insert" <?php checked( $current_mode, 'auto_insert' ); ?> class="ecs-radio-input">
 							<div class="ecs-radio-content">
 								<div class="ecs-radio-text">
-									<span class="ecs-radio-title"><?php esc_html_e( 'Auto Insert', 'code-snippet' ); ?></span>
-									<span class="ecs-radio-description"><?php esc_html_e( 'Automatically execute the snippet in the selected location', 'code-snippet' ); ?></span>
+									<span class="ecs-radio-title"><?php esc_html_e( 'Auto Insert', 'wp-smart-code' ); ?></span>
+									<span class="ecs-radio-description"><?php esc_html_e( 'Automatically execute the snippet in the selected location', 'wp-smart-code' ); ?></span>
 								</div>
 							</div>
 						</label>
@@ -232,14 +244,14 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 							<input type="radio" name="mode" value="shortcode" <?php checked( $current_mode, 'shortcode' ); ?> <?php disabled( in_array( $type, [ 'css', 'js' ], true ) ); ?> class="ecs-radio-input">
 							<div class="ecs-radio-content">
 								<div class="ecs-radio-text">
-									<span class="ecs-radio-title"><?php esc_html_e( 'Shortcode', 'code-snippet' ); ?></span>
+									<span class="ecs-radio-title"><?php esc_html_e( 'Shortcode', 'wp-smart-code' ); ?></span>
 									<span class="ecs-radio-description">
 										<?php if ( in_array( $type, [ 'css', 'js' ], true ) ) : ?>
-											<?php esc_html_e( 'Not available for CSS/JavaScript snippets', 'code-snippet' ); ?>
+											<?php esc_html_e( 'Not available for CSS/JavaScript snippets', 'wp-smart-code' ); ?>
 										<?php else : ?>
 											<?php
 											/* translators: %s: snippet ID or X for new snippets */
-											echo esc_html( sprintf( __( 'Only execute when shortcode is inserted: [ecs_snippet id="%s"]', 'code-snippet' ), $is_new ? 'X' : $snippet_id ) );
+											echo esc_html( sprintf( __( 'Only execute when shortcode is inserted: [ecs_snippet id="%s"]', 'wp-smart-code' ), $is_new ? 'X' : $snippet_id ) );
 											?>
 										<?php endif; ?>
 									</span>
@@ -251,152 +263,36 @@ $page_title = $is_new ? __( 'Add New Snippet', 'code-snippet' ) : __( 'Edit Snip
 					<!-- Location Settings -->
 					<div class="ecs-location-settings">
 						<label for="ecs-location-preset" class="ecs-label">
-							<?php esc_html_e( 'Location', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Location', 'wp-smart-code' ); ?>
 						</label>
 						<select id="ecs-location-preset" name="location_preset" class="ecs-input">
-							<option value="everywhere"><?php esc_html_e( 'Site Wide Header', 'code-snippet' ); ?></option>
-							<option value="frontend"><?php esc_html_e( 'Frontend Only', 'code-snippet' ); ?></option>
-							<option value="admin"><?php esc_html_e( 'Admin Area Only', 'code-snippet' ); ?></option>
+							<option value="everywhere"><?php esc_html_e( 'Site Wide Header', 'wp-smart-code' ); ?></option>
+							<option value="frontend"><?php esc_html_e( 'Frontend Only', 'wp-smart-code' ); ?></option>
+							<option value="admin"><?php esc_html_e( 'Admin Area Only', 'wp-smart-code' ); ?></option>
 						</select>
 					</div>
-				</div>
 			</div>
-
-			<!-- Device Type Card -->
-			<div class="ecs-card">
-				<div class="ecs-card-header">
-					<h3 class="ecs-card-title">
-						<?php esc_html_e( 'Device Type', 'code-snippet' ); ?>
-					</h3>
-				</div>
-				<div class="ecs-card-content">
-					<p class="ecs-card-description">
-						<?php esc_html_e( 'Limit where you want this snippet to be loaded by device type. By default, snippets are loaded on all devices.', 'code-snippet' ); ?>
-					</p>
-					
-					<div class="ecs-device-options">
-						<label class="ecs-radio-card">
-							<input type="radio" name="device_type" value="any" checked class="ecs-radio-input">
-							<div class="ecs-radio-content">
-								<div class="ecs-radio-text">
-									<span class="ecs-radio-title"><?php esc_html_e( 'Any device type', 'code-snippet' ); ?></span>
-								</div>
-							</div>
-						</label>
-
-						<label class="ecs-radio-card">
-							<input type="radio" name="device_type" value="desktop" class="ecs-radio-input">
-							<div class="ecs-radio-content">
-								<div class="ecs-radio-text">
-									<span class="ecs-radio-title"><?php esc_html_e( 'Desktop only', 'code-snippet' ); ?></span>
-								</div>
-							</div>
-						</label>
-
-						<label class="ecs-radio-card">
-							<input type="radio" name="device_type" value="mobile" class="ecs-radio-input">
-							<div class="ecs-radio-content">
-								<div class="ecs-radio-text">
-									<span class="ecs-radio-title"><?php esc_html_e( 'Mobile only', 'code-snippet' ); ?></span>
-								</div>
-							</div>
-						</label>
-					</div>
-				</div>
-			</div>
-
-			<!-- Smart Conditional Logic Card -->
-			<div class="ecs-card">
-				<div class="ecs-card-header">
-					<h3 class="ecs-card-title">
-						<?php esc_html_e( 'Smart Conditional Logic', 'code-snippet' ); ?>
-					</h3>
-				</div>
-				<div class="ecs-card-content">
-					<p class="ecs-card-description">
-						<?php esc_html_e( 'Using conditional logic you can limit the pages where you want the snippet to be auto-inserted.', 'code-snippet' ); ?>
-					</p>
-					
-					<div class="ecs-conditional-logic">
-						<input type="checkbox" id="ecs-enable-logic" name="enable_logic" class="ecs-logic-toggle">
-						<label for="ecs-enable-logic" class="ecs-logic-label">
-							<?php esc_html_e( 'Enable Logic', 'code-snippet' ); ?>
-						</label>
-					</div>
-
-					<div class="ecs-advanced-conditions" style="display: none;">
-						<div class="ecs-condition-group">
-							<h4 class="ecs-condition-title"><?php esc_html_e( 'Page Types', 'code-snippet' ); ?></h4>
-							<div class="ecs-checkbox-group">
-								<label class="ecs-checkbox-item">
-									<input type="checkbox" name="page_types[]" value="front_page" class="ecs-checkbox-input">
-									<span class="ecs-checkbox-text"><?php esc_html_e( 'Front Page', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-checkbox-item">
-									<input type="checkbox" name="page_types[]" value="home" class="ecs-checkbox-input">
-									<span class="ecs-checkbox-text"><?php esc_html_e( 'Blog Page', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-checkbox-item">
-									<input type="checkbox" name="page_types[]" value="single" class="ecs-checkbox-input">
-									<span class="ecs-checkbox-text"><?php esc_html_e( 'Single Posts', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-checkbox-item">
-									<input type="checkbox" name="page_types[]" value="page" class="ecs-checkbox-input">
-									<span class="ecs-checkbox-text"><?php esc_html_e( 'Pages', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-checkbox-item">
-									<input type="checkbox" name="page_types[]" value="archive" class="ecs-checkbox-input">
-									<span class="ecs-checkbox-text"><?php esc_html_e( 'Archives', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-checkbox-item">
-									<input type="checkbox" name="page_types[]" value="search" class="ecs-checkbox-input">
-									<span class="ecs-checkbox-text"><?php esc_html_e( 'Search Results', 'code-snippet' ); ?></span>
-								</label>
-							</div>
-						</div>
-
-						<div class="ecs-condition-group">
-							<h4 class="ecs-condition-title"><?php esc_html_e( 'Login Status', 'code-snippet' ); ?></h4>
-							<div class="ecs-radio-group">
-								<label class="ecs-radio-item">
-									<input type="radio" name="login_status" value="any" checked class="ecs-radio-input">
-									<span class="ecs-radio-text"><?php esc_html_e( 'Any', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-radio-item">
-									<input type="radio" name="login_status" value="logged_in" class="ecs-radio-input">
-									<span class="ecs-radio-text"><?php esc_html_e( 'Logged In', 'code-snippet' ); ?></span>
-								</label>
-								<label class="ecs-radio-item">
-									<input type="radio" name="login_status" value="logged_out" class="ecs-radio-input">
-									<span class="ecs-radio-text"><?php esc_html_e( 'Logged Out', 'code-snippet' ); ?></span>
-								</label>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-
+		</div>
 			<!-- Revisions Card -->
 			<?php if ( $snippet_id > 0 ) : ?>
 			<div class="ecs-card ecs-revisions-card">
 				<div class="ecs-card-header">
 					<h3 class="ecs-card-title">
-						<?php esc_html_e( 'Revisions', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Revisions', 'wp-smart-code' ); ?>
 					</h3>
 					<button type="button" id="ecs-refresh-revisions" class="button button-secondary button-small">
-						<?php esc_html_e( 'Refresh', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Refresh', 'wp-smart-code' ); ?>
 					</button>
 				</div>
 				<div class="ecs-card-content">
 					<p class="ecs-card-description">
-						<?php esc_html_e( 'Restore a previous version of this snippet.', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Restore a previous version of this snippet.', 'wp-smart-code' ); ?>
 					</p>
 					
 					<div id="ecs-revisions-list" class="ecs-revisions-list">
 						<div class="ecs-loading-placeholder">
 							<span class="spinner is-active" style="float: none; margin: 0;"></span>
-							<?php esc_html_e( 'Loading revisions...', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Loading revisions...', 'wp-smart-code' ); ?>
 						</div>
 					</div>
 				</div>
@@ -416,10 +312,10 @@ jQuery(document).ready(function($) {
 	$('#ecs-snippet-active').on('change', function() {
 		const $statusText = $('#ecs-status-text');
 		if ($(this).is(':checked')) {
-			$statusText.text('<?php echo esc_js( __( 'Active', 'code-snippet' ) ); ?>');
+			$statusText.text('<?php echo esc_js( __( 'Active', 'wp-smart-code' ) ); ?>');
 			$statusText.addClass('ecs-status-active');
 		} else {
-			$statusText.text('<?php echo esc_js( __( 'Inactive', 'code-snippet' ) ); ?>');
+			$statusText.text('<?php echo esc_js( __( 'Inactive', 'wp-smart-code' ) ); ?>');
 			$statusText.removeClass('ecs-status-active');
 		}
 	});

@@ -252,7 +252,7 @@ class Shortcode {
 						'%1$d%2$ssnippet%3$s', 
 						'%1$d%2$ssnippets%3$s', 
 						$count, 
-						'code-snippet' 
+						'wp-smart-code' 
 					),
 					$count,
 					$type_text,
@@ -266,7 +266,7 @@ class Shortcode {
 				
 				return sprintf(
 					/* translators: %d: total, %d: active, %d: inactive */
-					__( '%1$d total (%2$d active, %3$d inactive)', 'code-snippet' ),
+					__( '%1$d total (%2$d active, %3$d inactive)', 'wp-smart-code' ),
 					$total,
 					$active,
 					$inactive
@@ -302,18 +302,23 @@ class Shortcode {
 
 		switch ( $type ) {
 			case 'php':
-				// Execute PHP code
+				// Execute PHP code through sandbox for security
 				if ( current_user_can( 'manage_options' ) ) {
-					// Only allow admins to execute PHP
-					eval( '?>' . $code ); // phpcs:ignore Squiz.PHP.Eval.Discouraged
+					// Use sandbox for consistent security checks
+					$sandbox = Sandbox::get_instance();
+					$result = $sandbox->execute_php( $code );
+					if ( ! $result['success'] ) {
+						return $this->render_error( $result['error'] );
+					}
+					echo $result['output']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				} else {
 					return $this->render_error( 'PHP execution not allowed for current user.' );
 				}
 				break;
 
 			case 'html':
-				// Output HTML directly
-				echo $code;
+				// Output HTML with allowed tags
+				echo wp_kses_post( $code );
 				break;
 
 			default:

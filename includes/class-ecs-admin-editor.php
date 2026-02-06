@@ -60,12 +60,12 @@ class AdminEditor {
 	public function handle_save_snippet(): void {
 		// Check user capabilities
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have permission to save snippets.', 'code-snippet' ) );
+			wp_die( esc_html__( 'You do not have permission to save snippets.', 'wp-smart-code' ) );
 		}
 
 		// Verify nonce
 		if ( ! isset( $_POST['ecs_snippet_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['ecs_snippet_nonce'] ) ), 'ecs_save_snippet' ) ) {
-			wp_die( esc_html__( 'Security verification failed.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Security verification failed.', 'wp-smart-code' ) );
 		}
 
 		// Get snippet data
@@ -92,11 +92,11 @@ class AdminEditor {
 
 		// Validate required fields
 		if ( empty( $title ) ) {
-			wp_die( esc_html__( 'Title is required.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Title is required.', 'wp-smart-code' ) );
 		}
 
 		if ( empty( $code ) ) {
-			wp_die( esc_html__( 'Code is required.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Code is required.', 'wp-smart-code' ) );
 		}
 
 		// Validate syntax
@@ -105,7 +105,7 @@ class AdminEditor {
 			$error_message = $validation_result['error'];
 			if ( $validation_result['line'] > 0 ) {
 				/* translators: %1$s: Error message, %2$d: Line number */
-				$error_message = sprintf( __( '%1$s on line %2$d', 'code-snippet' ), $error_message, $validation_result['line'] );
+				$error_message = sprintf( __( '%1$s on line %2$d', 'wp-smart-code' ), $error_message, $validation_result['line'] );
 			}
 			wp_die( esc_html( $error_message ) );
 		}
@@ -136,7 +136,7 @@ class AdminEditor {
 
 		// Validate mode for snippet type
 		if ( $mode === 'shortcode' && in_array( $type, [ 'css', 'js' ], true ) ) {
-			wp_die( esc_html__( 'Shortcode mode is not available for CSS and JavaScript snippets. Please use Auto Insert mode instead.', 'code-snippet' ) );
+			wp_die( esc_html__( 'Shortcode mode is not available for CSS and JavaScript snippets. Please use Auto Insert mode instead.', 'wp-smart-code' ) );
 		}
 
 		// Prepare data
@@ -156,7 +156,7 @@ class AdminEditor {
 			// Update existing snippet
 			$result = $this->snippet->update( $snippet_id, $data );
 			if ( ! $result && $result !== 0 ) {
-				wp_die( esc_html__( 'Failed to update snippet.', 'code-snippet' ) );
+				wp_die( esc_html__( 'Failed to update snippet.', 'wp-smart-code' ) );
 			}
 			
 			// Build redirect URL
@@ -176,7 +176,7 @@ class AdminEditor {
 			// Create new snippet
 			$new_id = $this->snippet->create( $data );
 			if ( ! $new_id ) {
-				wp_die( esc_html__( 'Failed to create snippet.', 'code-snippet' ) );
+				wp_die( esc_html__( 'Failed to create snippet.', 'wp-smart-code' ) );
 			}
 			
 			// Build redirect URL

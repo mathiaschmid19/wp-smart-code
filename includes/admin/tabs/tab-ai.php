@@ -19,16 +19,16 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 <div class="ecs-tools-panel">
 	<!-- Hero Card -->
 	<div class="ecs-card ecs-tools-hero-card">
-		<h2 class="ecs-tools-hero-title"><?php esc_html_e( 'AI Assistant Settings', 'code-snippet' ); ?></h2>
+		<h2 class="ecs-tools-hero-title"><?php esc_html_e( 'AI Assistant Settings', 'wp-smart-code' ); ?></h2>
 		<p class="ecs-tools-hero-description">
-			<?php esc_html_e( 'Configure AI-powered code generation and assistance features for your snippets.', 'code-snippet' ); ?>
+			<?php esc_html_e( 'Configure AI-powered code generation and assistance features for your snippets.', 'wp-smart-code' ); ?>
 		</p>
 	</div>
 
 	<!-- Main Settings Card -->
 	<div class="ecs-card ecs-tools-main-card">
 		<div class="ecs-card-header">
-			<h3 class="ecs-card-title"><?php esc_html_e( 'AI Configuration', 'code-snippet' ); ?></h3>
+			<h3 class="ecs-card-title"><?php esc_html_e( 'AI Configuration', 'wp-smart-code' ); ?></h3>
 		</div>
 		<div class="ecs-card-content">
 			<form id="ecs-ai-settings-form" class="ecs-ai-form">
@@ -41,8 +41,8 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 						</label>
 						<div class="ecs-toggle-content">
 							<label for="ecs-ai-enabled" class="ecs-toggle-label">
-								<strong><?php esc_html_e( 'Enable AI Assistant', 'code-snippet' ); ?></strong>
-								<span class="ecs-toggle-description"><?php esc_html_e( 'Allow AI-powered code generation and assistance in the snippet editor', 'code-snippet' ); ?></span>
+								<strong><?php esc_html_e( 'Enable AI Assistant', 'wp-smart-code' ); ?></strong>
+								<span class="ecs-toggle-description"><?php esc_html_e( 'Allow AI-powered code generation and assistance in the snippet editor', 'wp-smart-code' ); ?></span>
 							</label>
 						</div>
 					</div>
@@ -51,7 +51,7 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 				<!-- API Key Section -->
 				<div class="ecs-form-group">
 					<label for="ecs-ai-api-key" class="ecs-form-label">
-						<?php esc_html_e( 'Gemini AI API Key', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Gemini AI API Key', 'wp-smart-code' ); ?>
 						<span class="ecs-required">*</span>
 					</label>
 					<div class="ecs-input-group">
@@ -61,16 +61,16 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 							name="api_key"
 							value="<?php echo esc_attr( $ai_api_key ); ?>" 
 							class="ecs-input ecs-input-large"
-							placeholder="<?php esc_attr_e( 'Enter your Gemini AI API key', 'code-snippet' ); ?>"
+							placeholder="<?php esc_attr_e( 'Enter your Gemini AI API key', 'wp-smart-code' ); ?>"
 						>
-						<button type="button" id="ecs-toggle-api-key" class="ecs-input-toggle" title="<?php esc_attr_e( 'Show/Hide API Key', 'code-snippet' ); ?>">
+						<button type="button" id="ecs-toggle-api-key" class="ecs-input-toggle" title="<?php esc_attr_e( 'Show/Hide API Key', 'wp-smart-code' ); ?>">
 							👁️
 						</button>
 					</div>
 					<p class="ecs-form-description">
-						<?php esc_html_e( 'Get your free API key from', 'code-snippet' ); ?> 
+						<?php esc_html_e( 'Get your free API key from', 'wp-smart-code' ); ?> 
 						<a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="ecs-link">
-							<?php esc_html_e( 'Google AI Studio', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Google AI Studio', 'wp-smart-code' ); ?>
 						</a>
 					</p>
 				</div>
@@ -78,7 +78,7 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 				<!-- Save Button -->
 				<div class="ecs-form-actions">
 					<button type="button" id="ecs-save-ai-settings" class="button button-primary button-hero">
-						<?php esc_html_e( 'Save AI Settings', 'code-snippet' ); ?>
+						<?php esc_html_e( 'Save AI Settings', 'wp-smart-code' ); ?>
 					</button>
 					<span id="ecs-ai-save-result" class="ecs-test-result"></span>
 				</div>
@@ -92,36 +92,36 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 		<div class="ecs-card ecs-info-card">
 			<div class="ecs-card-header-compact">
 				<span class="ecs-card-icon">✨</span>
-				<h3 class="ecs-card-title-compact"><?php esc_html_e( 'AI Features', 'code-snippet' ); ?></h3>
+				<h3 class="ecs-card-title-compact"><?php esc_html_e( 'AI Features', 'wp-smart-code' ); ?></h3>
 			</div>
 			<div class="ecs-card-content">
 				<ul class="ecs-feature-list">
 					<li class="ecs-feature-item">
 						<span class="ecs-guideline-icon">✓</span>
 						<div class="ecs-feature-content">
-							<strong><?php esc_html_e( 'Code Generation', 'code-snippet' ); ?></strong>
-							<span class="ecs-feature-description"><?php esc_html_e( 'Generate code snippets from natural language descriptions', 'code-snippet' ); ?></span>
+							<strong><?php esc_html_e( 'Code Generation', 'wp-smart-code' ); ?></strong>
+							<span class="ecs-feature-description"><?php esc_html_e( 'Generate code snippets from natural language descriptions', 'wp-smart-code' ); ?></span>
 						</div>
 					</li>
 					<li class="ecs-feature-item">
 						<span class="ecs-guideline-icon">✓</span>
 						<div class="ecs-feature-content">
-							<strong><?php esc_html_e( 'Code Improvement', 'code-snippet' ); ?></strong>
-							<span class="ecs-feature-description"><?php esc_html_e( 'Enhance existing code with security, performance, and readability improvements', 'code-snippet' ); ?></span>
+							<strong><?php esc_html_e( 'Code Improvement', 'wp-smart-code' ); ?></strong>
+							<span class="ecs-feature-description"><?php esc_html_e( 'Enhance existing code with security, performance, and readability improvements', 'wp-smart-code' ); ?></span>
 						</div>
 					</li>
 					<li class="ecs-feature-item">
 						<span class="ecs-guideline-icon">✓</span>
 						<div class="ecs-feature-content">
-							<strong><?php esc_html_e( 'Code Explanation', 'code-snippet' ); ?></strong>
-							<span class="ecs-feature-description"><?php esc_html_e( 'Get detailed explanations of how your code works', 'code-snippet' ); ?></span>
+							<strong><?php esc_html_e( 'Code Explanation', 'wp-smart-code' ); ?></strong>
+							<span class="ecs-feature-description"><?php esc_html_e( 'Get detailed explanations of how your code works', 'wp-smart-code' ); ?></span>
 						</div>
 					</li>
 					<li class="ecs-feature-item">
 						<span class="ecs-guideline-icon">✓</span>
 						<div class="ecs-feature-content">
-							<strong><?php esc_html_e( 'WordPress Integration', 'code-snippet' ); ?></strong>
-							<span class="ecs-feature-description"><?php esc_html_e( 'AI understands WordPress best practices and generates compliant code', 'code-snippet' ); ?></span>
+							<strong><?php esc_html_e( 'WordPress Integration', 'wp-smart-code' ); ?></strong>
+							<span class="ecs-feature-description"><?php esc_html_e( 'AI understands WordPress best practices and generates compliant code', 'wp-smart-code' ); ?></span>
 						</div>
 					</li>
 				</ul>
@@ -132,33 +132,33 @@ $ai_api_key = get_option( 'ecs_ai_api_key', '' );
 		<div class="ecs-card ecs-info-card">
 			<div class="ecs-card-header-compact">
 				<span class="ecs-card-icon">📋</span>
-				<h3 class="ecs-card-title-compact"><?php esc_html_e( 'Usage Guidelines', 'code-snippet' ); ?></h3>
+				<h3 class="ecs-card-title-compact"><?php esc_html_e( 'Usage Guidelines', 'wp-smart-code' ); ?></h3>
 			</div>
 			<div class="ecs-card-content">
 				<div class="ecs-guidelines-section">
-					<h4 class="ecs-guidelines-title"><?php esc_html_e( 'Best Practices', 'code-snippet' ); ?></h4>
+					<h4 class="ecs-guidelines-title"><?php esc_html_e( 'Best Practices', 'wp-smart-code' ); ?></h4>
 					<ul class="ecs-guideline-list">
 						<li class="ecs-guideline-item ecs-guideline-success">
 							<span class="ecs-guideline-icon">✓</span>
-							<?php esc_html_e( 'Be specific in your prompts for better results', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Be specific in your prompts for better results', 'wp-smart-code' ); ?>
 						</li>
 						<li class="ecs-guideline-item ecs-guideline-success">
 							<span class="ecs-guideline-icon">✓</span>
-							<?php esc_html_e( 'Review generated code before using in production', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Review generated code before using in production', 'wp-smart-code' ); ?>
 						</li>
 						<li class="ecs-guideline-item ecs-guideline-success">
 							<span class="ecs-guideline-icon">✓</span>
-							<?php esc_html_e( 'Test snippets in a staging environment first', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Test snippets in a staging environment first', 'wp-smart-code' ); ?>
 						</li>
 						<li class="ecs-guideline-item ecs-guideline-warning">
 							<span class="ecs-guideline-icon">!</span>
-							<?php esc_html_e( 'Use the improvement feature to enhance existing code', 'code-snippet' ); ?>
+							<?php esc_html_e( 'Use the improvement feature to enhance existing code', 'wp-smart-code' ); ?>
 						</li>
 					</ul>
 				</div>
 
 				<div class="ecs-examples-section">
-					<h4 class="ecs-examples-title"><?php esc_html_e( 'Example Prompts', 'code-snippet' ); ?></h4>
+					<h4 class="ecs-examples-title"><?php esc_html_e( 'Example Prompts', 'wp-smart-code' ); ?></h4>
 					<div class="ecs-prompt-examples">
 						<div class="ecs-prompt-example">
 							<div class="ecs-prompt-header">

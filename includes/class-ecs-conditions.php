@@ -351,14 +351,14 @@ class Conditions
     public static function get_page_types(): array
     {
         return [
-            'home'       => __('Blog Home', 'code-snippet'),
-            'front_page' => __('Front Page', 'code-snippet'),
-            'single'     => __('Single Post', 'code-snippet'),
-            'page'       => __('Page', 'code-snippet'),
-            'archive'    => __('Archive', 'code-snippet'),
-            'search'     => __('Search Results', 'code-snippet'),
-            '404'        => __('404 Error', 'code-snippet'),
-            'admin'      => __('Admin Area', 'code-snippet'),
+            'home'       => __('Blog Home', 'wp-smart-code'),
+            'front_page' => __('Front Page', 'wp-smart-code'),
+            'single'     => __('Single Post', 'wp-smart-code'),
+            'page'       => __('Page', 'wp-smart-code'),
+            'archive'    => __('Archive', 'wp-smart-code'),
+            'search'     => __('Search Results', 'wp-smart-code'),
+            '404'        => __('404 Error', 'wp-smart-code'),
+            'admin'      => __('Admin Area', 'wp-smart-code'),
         ];
     }
 
@@ -375,7 +375,7 @@ class Conditions
             $wp_roles = new \WP_Roles();
         }
 
-        $roles = ['guest' => __('Guest (Not Logged In)', 'code-snippet')];
+        $roles = ['guest' => __('Guest (Not Logged In)', 'wp-smart-code')];
 
         foreach ($wp_roles->roles as $role_key => $role) {
             $roles[$role_key] = $role['name'];
@@ -392,8 +392,8 @@ class Conditions
     public static function get_device_types(): array
     {
         return [
-            'mobile'  => __('Mobile', 'code-snippet'),
-            'desktop' => __('Desktop', 'code-snippet'),
+            'mobile'  => __('Mobile', 'wp-smart-code'),
+            'desktop' => __('Desktop', 'wp-smart-code'),
         ];
     }
 
@@ -405,8 +405,8 @@ class Conditions
     public static function get_login_statuses(): array
     {
         return [
-            'logged_in'  => __('Logged In', 'code-snippet'),
-            'logged_out' => __('Logged Out', 'code-snippet'),
+            'logged_in'  => __('Logged In', 'wp-smart-code'),
+            'logged_out' => __('Logged Out', 'wp-smart-code'),
         ];
     }
 

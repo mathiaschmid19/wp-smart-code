@@ -390,7 +390,7 @@ class Snippet {
 		
 		// Prepare new data
 		$data = [
-			'title'      => sprintf( __( 'Copy of %s', 'code-snippet' ), $snippet['title'] ),
+			'title'      => sprintf( __( 'Copy of %s', 'wp-smart-code' ), $snippet['title'] ),
 			'slug'       => $new_slug,
 			'type'       => $snippet['type'],
 			'code'       => $snippet['code'],
